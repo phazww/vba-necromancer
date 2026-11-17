@@ -137,14 +137,15 @@ Format: EARS (Easy Approach to Requirements Syntax)
 
 **REQ-07.7** `CInt(x)` and `CLng(x)` shall round half to even and then apply the respective overflow check.
 
-**REQ-07.8** Date values shall be stored as `Double` (days since 1899-12-30, matching Excel's serial date system).
+**REQ-07.8** Date values shall be stored as `Double` (days since 1899-12-30, matching VBA's own epoch). `CDbl(DateSerial(1900,1,1))` = 2; `CDbl(DateSerial(1900,2,28))` = 60; `CDbl(DateSerial(1900,3,1))` = 61. VBA does not insert a fictitious February 29, 1900. For dates on or after 1900-03-01 the VBA double equals the Excel cell serial; for January 1 through February 28, 1900 the VBA double is one greater than the Excel cell serial. The helpers `excelSerialToVbaDate` and `vbaDateToExcelSerial` shall convert between the two representations for that window; `excelSerialToVbaDate(60)` (Excel's fictitious Feb 29) shall return `NaN`.
 
 *Acceptance criteria:*
 - `CInt(2.5)` → `2`; `CInt(3.5)` → `4`; `CInt(32768)` → runtime error 6.
 - `7 \ 2` → `3`; `7 Mod 2` → `1`; `Round(2.5, 0)` → `2`; `Round(3.5, 0)` → `4`.
+- `Round(2.675, 2)` → `2.67`; `Round(32.675, 2)` → `32.67`; `Round(0.125, 2)` → `0.12`; `Round(0.375, 2)` → `0.38`.
 - Fast-check: for `n` in −32 768..32 767, assigning `n` to an `Integer` variable does not raise overflow.
 - Fast-check: for `n` outside that range, assigning to `Integer` raises error 6.
-- Date serial for 1900-01-01 is `1.0`; for 2000-01-01 is `36526.0`.
+- `dateSerial(1900,1,1)` = `2`; `dateSerial(1900,2,28)` = `60`; `dateSerial(1900,3,1)` = `61`; `dateSerial(2026,10,31)` = `46326`; `dateSerial(2000,1,1)` = `36526`.
 
 ---
 

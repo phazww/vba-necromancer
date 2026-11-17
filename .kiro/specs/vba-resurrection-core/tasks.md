@@ -160,8 +160,9 @@ Tasks are ordered so each builds on the previous. Each task references the requi
 
 ---
 
-## TASK-07 — Interpreter — numeric semantics and coercion (`packages/vba`)
+## TASK-07 — Interpreter — numeric semantics and coercion (`packages/vba`) ✅
 
+**Status:** Done  
 **Requires:** REQ-07  
 **Depends on:** TASK-05
 

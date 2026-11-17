@@ -3,6 +3,17 @@
 export { tokenize } from "./lexer.js";
 export { parse } from "./parser.js";
 export { ParseError, UnsupportedError, RuntimeError } from "./errors.js";
+export {
+  roundHalfEven,
+  roundHalfEvenTo,
+  toInteger,
+  toLong,
+  intDiv,
+  vbaMod,
+  dateSerial,
+  excelSerialToVbaDate,
+  vbaDateToExcelSerial,
+} from "./coerce.js";
 export type {
   Token,
   TokenType,

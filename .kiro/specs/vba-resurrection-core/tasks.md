@@ -4,15 +4,16 @@ Tasks are ordered so each builds on the previous. Each task references the requi
 
 ---
 
-## TASK-01 — Repository scaffolding and tooling
+## TASK-01 — Repository scaffolding and tooling ✅
 
+**Status:** Done  
 **Requires:** REQ-13  
 **Blocks:** all subsequent tasks
 
 ### What to do
-1. Initialise a pnpm workspace at repo root with `pnpm-workspace.yaml` listing `packages/*` and `app`.
+1. Initialise an npm workspace at repo root with `"workspaces"` in `package.json` listing `packages/*` and `app`.
 2. Create `packages/ovba/`, `packages/vba/`, `packages/workbook/`, `app/` as separate packages, each with `package.json` (`name`, `version`, `type: "module"`).
-3. Add root-level `package.json` with `"workspaces"` and dev-dependency scripts: `"test": "vitest run --reporter=verbose"`, `"build": "pnpm -r build"`, `"lint": "eslint . --ext .ts"`.
+3. Add root-level `package.json` with `"workspaces"` and dev-dependency scripts: `"test": "vitest run --reporter=verbose"`, `"build": "npm run build --workspaces --if-present"`, `"lint": "eslint . --ext .ts"`.
 4. Add a root `tsconfig.base.json` with `"strict": true`, `"target": "ES2022"`, `"module": "ESNext"`, `"moduleResolution": "bundler"`, `"noImplicitAny": true`. Each package has its own `tsconfig.json` extending the base.
 5. Add Vitest config at root (`vitest.config.ts`) with `include: ["packages/*/src/**/*.test.ts", "packages/*/tests/**/*.ts"]`.
 6. Add ESLint config (`eslint.config.js`) with `eslint:recommended` and `@typescript-eslint/recommended`.
@@ -21,9 +22,9 @@ Tasks are ordered so each builds on the previous. Each task references the requi
 9. Add a placeholder Vite app at `app/` with `vite.config.ts`, `index.html`, and `src/main.ts`.
 
 ### Tests
-- `pnpm install` exits 0.
-- `pnpm test` exits 0 (no test files yet — Vitest should report "no tests found" with exit 0, or use `passWithNoTests: true`).
-- `pnpm -r exec tsc --noEmit` exits 0 across all packages.
+- `npm install` exits 0.
+- `npm test` exits 0 (no test files yet — Vitest should report "no tests found" with exit 0, or use `passWithNoTests: true`).
+- `tsc --noEmit` exits 0 across all packages.
 
 ---
 
@@ -400,7 +401,7 @@ Tasks are ordered so each builds on the previous. Each task references the requi
 
 ---
 
-## TASK-17 — Final integration, `pnpm build`, and smoke test
+## TASK-17 — Final integration, `npm run build`, and smoke test
 
 **Requires:** REQ-13  
 **Depends on:** all previous tasks
@@ -411,12 +412,12 @@ Tasks are ordered so each builds on the previous. Each task references the requi
    - Calls `extractModules`, `openWorkbook`, `tokenize+parse`, displays module names.
    - A "Run" button that calls `runMacro` and shows the trace table and graveyard list.
    - A "Download" button that calls `workbook.save()` and triggers a browser download.
-2. Verify `pnpm build` produces `app/dist/index.html`.
-3. Verify `pnpm test` passes all tests (unit, property, integration).
-4. Run `pnpm -r exec tsc --noEmit` and fix any type errors.
+2. Verify `npm run build` produces `app/dist/index.html`.
+3. Verify `npm test` passes all tests (unit, property, integration).
+4. Run `tsc --noEmit` across all packages and fix any type errors.
 
 ### Tests / verification
-- `pnpm test` exits 0.
-- `pnpm build` exits 0 and `app/dist/index.html` exists.
-- `pnpm -r exec tsc --noEmit` exits 0.
+- `npm test` exits 0.
+- `npm run build` exits 0 and `app/dist/index.html` exists.
+- `tsc --noEmit` exits 0 across all packages.
 - Manual smoke test: drop `fixtures/build/simple.xlsm` into the browser UI, click Run, verify expected cell values appear in the trace.

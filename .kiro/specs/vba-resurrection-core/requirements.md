@@ -242,17 +242,17 @@ Format: EARS (Easy Approach to Requirements Syntax)
 
 ## REQ-13 — Project scaffolding and tooling
 
-**REQ-13.1** The repository shall be a pnpm workspace with packages `ovba`, `vba`, and `workbook` under `packages/`, and an `app` package at `app/`.
+**REQ-13.1** The repository shall be an npm workspace with packages `ovba`, `vba`, and `workbook` under `packages/`, and an `app` package at `app/`.
 
 **REQ-13.2** Each package shall have its own `tsconfig.json` with `"strict": true`, `"target": "ES2022"`, and `"noImplicitAny": true`.
 
-**REQ-13.3** Each package shall have a Vitest configuration; `pnpm test` at root shall run all tests.
+**REQ-13.3** Each package shall have a Vitest configuration; `npm test` at root shall run all tests.
 
 **REQ-13.4** ESLint and Prettier shall be configured at root with configs extending `eslint:recommended` and `plugin:@typescript-eslint/recommended`.
 
-**REQ-13.5** The `app` package shall use Vite as a dev server and bundler; `pnpm build` at root shall produce a `dist/` directory deployable to any static host.
+**REQ-13.5** The `app` package shall use Vite as a dev server and bundler; `npm run build` at root shall produce a `dist/` directory deployable to any static host.
 
 *Acceptance criteria:*
-- `pnpm install && pnpm test` exits with code 0 when all tests pass.
-- `pnpm build` produces `app/dist/index.html` and associated assets.
+- `npm install && npm test` exits with code 0 when all tests pass.
+- `npm run build` produces `app/dist/index.html` and associated assets.
 - TypeScript compilation (`tsc --noEmit`) exits with code 0 across all packages.

@@ -30,6 +30,7 @@ Tasks are ordered so each builds on the previous. Each task references the requi
 
 ## TASK-02 — CFB/OLE2 parser (`packages/ovba`)
 
+**Status:** Done  
 **Requires:** REQ-01  
 **Depends on:** TASK-01
 
@@ -53,6 +54,7 @@ Tasks are ordered so each builds on the previous. Each task references the requi
 
 ## TASK-03 — MS-OVBA decompressor (`packages/ovba`)
 
+**Status:** Done  
 **Requires:** REQ-02  
 **Depends on:** TASK-01
 
@@ -76,6 +78,7 @@ Tasks are ordered so each builds on the previous. Each task references the requi
 
 ## TASK-04 — `dir` stream parser and module extraction (`packages/ovba`)
 
+**Status:** Done  
 **Requires:** REQ-03  
 **Depends on:** TASK-02, TASK-03
 

@@ -103,6 +103,7 @@ Tasks are ordered so each builds on the previous. Each task references the requi
 
 ## TASK-05 — VBA lexer (`packages/vba`)
 
+**Status:** Done  
 **Requires:** REQ-04  
 **Depends on:** TASK-01
 
@@ -132,6 +133,7 @@ Tasks are ordered so each builds on the previous. Each task references the requi
 
 ## TASK-06 — VBA parser (`packages/vba`)
 
+**Status:** Done  
 **Requires:** REQ-05  
 **Depends on:** TASK-05
 

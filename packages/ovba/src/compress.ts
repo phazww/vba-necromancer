@@ -115,9 +115,10 @@ export function compress(input: Uint8Array): Uint8Array {
     // For a full 4096-byte chunk use a raw chunk (literal encoding costs
     // ceil(4096/8)*9 = 4608 bytes which exceeds the 4098-byte chunk limit).
     if (chunkSize === 4096) {
-      // Raw chunk header: isCompressed=0 (bit 15=0), size field = (4096-3)&0x0FFF = 0x0FFD
-      output.push(0xfd);
-      output.push(0x0f);
+      // Raw chunk header (MS-OVBA 2.4.1.1.5): CompressedChunkSize = 4098 (2-byte header + 4096 bytes),
+      // size field = 4098 - 3 = 0xFFF, CompressedChunkSignature = 0b011, CompressedChunkFlag = 0 -> 0x3FFF.
+      output.push(0xff);
+      output.push(0x3f);
       for (let i = 0; i < 4096; i++) {
         output.push(input[chunkStart + i]!);
       }
@@ -162,9 +163,10 @@ export function compress(input: Uint8Array): Uint8Array {
       }
     }
 
-    // Header: bits[0:11] = (chunkDataSize - 3) & 0x0FFF, bit[15] = 1 (isCompressed)
+    // Header (MS-OVBA 2.4.1.1.5): CompressedChunkSize counts the whole chunk INCLUDING the 2-byte header;
+    // the size field stores CompressedChunkSize - 3. Signature 0b011 (bits 12-14), flag 1 (bit 15) -> 0xB000.
     const chunkDataSize = chunkData.length;
-    const header = ((chunkDataSize - 3) & 0x0fff) | 0xb000;
+    const header = ((chunkDataSize + 2 - 3) & 0x0fff) | 0xb000;
     output.push(header & 0xff);
     output.push((header >> 8) & 0xff);
     for (const b of chunkData) {

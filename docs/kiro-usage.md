@@ -98,3 +98,17 @@ the other way around.
 the `packages/ovba` test suite.  
 **Purpose:** keeps the generated `.xlsm` fixtures in `fixtures/build/` in sync with their
 VBA source whenever a `.bas` or `cells.json` changes.
+
+---
+
+## Review findings fixed by the developer after Kiro's free credits ran out (17 Nov)
+
+Kiro implemented TASK-09 (fixture builder) until the monthly free-tier limit stopped it with 5 failing tests. The rest was finished by hand, and an **independent reader** was added as an oracle: `olevba` from oletools (`tools/crosscheck_olevba.py`), which had not been part of the loop before.
+
+1. **Test bug, not a ZIP bug.** `new Uint8Array(readFileSync(p).buffer)` reads Node's whole 8 KB buffer pool for files under 4 KB, so small fixtures looked corrupt and only the 5 KB demo workbook passed. Fixed with `new Uint8Array(readFileSync(p))`.
+2. **Hand-written ZIP and CFB writers replaced** by fflate (ZIP) and SheetJS `cfb` (Compound File Binary). Our own reader and writer agreed with each other, but `olevba` could not read the result.
+3. **PROJECT stream location.** It must sit in the root storage next to `VBA/` (MS-OVBA 2.2.1), not inside it.
+4. **Chunk size semantics.** `CompressedChunkSize` counts the whole chunk including its 2-byte header (MS-OVBA 2.4.1.1.5); both compressor and decompressor had it as data-only, which only works for a single last chunk (as in the 3.2.2 example). Raw chunks now use header 0x3FFF, and the decompressor validates the 0b011 signature.
+5. **dir stream.** The parser treated PROJECTVERSION (0x0009) as a normal `Id|Size|Data` record (it is `Id|Reserved=4|Major(4)|Minor(2)`) and expected a non-standard PROJECTMODULES layout, so it would have failed on every real Excel file. Rewritten per MS-OVBA 2.3.4.2 with a single record walk; a matching `writeDirStream` builds fixtures. Module names are decoded with the project code page.
+
+Result: all six fixture workbooks are read by `olevba` with sources identical to `fixtures/src/*/Module1.bas`, including Cyrillic text in code page 1251.

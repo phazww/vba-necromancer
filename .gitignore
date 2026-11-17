@@ -4,3 +4,4 @@ coverage/
 .agy-bridge/
 HANDOFF_CONTEXT.md
 .DS_Store
+.venv-tools/

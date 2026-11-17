@@ -37,8 +37,15 @@ export function decompress(input: Uint8Array): Uint8Array {
     // Note: for compressors that emit < 3 bytes of chunk data (last partial chunk),
     // this value will be large (e.g., 4098) due to unsigned wrapping. The actual
     // termination is controlled by input.length.
+    // CompressedChunkSize counts the whole chunk including this 2-byte header (MS-OVBA 2.4.1.1.5).
     const compressedSize = (header & 0x0fff) + 3;
     const isCompressed = (header >> 15) & 1;
+    if (((header >> 12) & 0b111) !== 0b011) {
+      throw new OVBADecompressError(
+        `Invalid CompressedChunkSignature 0b${((header >> 12) & 0b111).toString(2)} (expected 0b011)`,
+        ip - 2,
+      );
+    }
 
     const chunkStart = output.length; // decompressed buffer start of this chunk
 
@@ -53,7 +60,7 @@ export function decompress(input: Uint8Array): Uint8Array {
     } else {
       // Compressed chunk: ip is now pointing at CompressedChunkData[0]
       // chunkEnd is the nominal exclusive end (may exceed input.length for last chunk)
-      const chunkEnd = ip + compressedSize;
+      const chunkEnd = ip - 2 + compressedSize;
 
       outer: while (ip < chunkEnd && ip < input.length) {
         const flagByte = input[ip++]!;

@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Fixture rebuild",
+      "trigger": "PostFileSave",
+      "description": "When any file under fixtures/src/ changes, rebuild the fixture workbooks and run the ovba end-to-end tests.",
+      "matcher": "fixtures/src/",
+      "action": {
+        "type": "command",
+        "command": "cd \"$(git rev-parse --show-toplevel)\" && npm run fixtures:build --if-present 2>&1 && npm test --workspace=packages/ovba --if-present 2>&1 | tail -40",
+        "timeout": 180
+      }
+    }
+  ]
+}

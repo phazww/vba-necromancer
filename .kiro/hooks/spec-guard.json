@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Spec guard",
+      "trigger": "PostFileSave",
+      "description": "When a hand-written expected-value file is edited, require the agent to explain and justify the change, and refuse edits that exist only to make tests pass.",
+      "matcher": "fixtures/expected/.*\\.json$|packages/ovba/tests/spec-examples\\.test\\.ts$",
+      "action": {
+        "type": "agent",
+        "prompt": "A file that serves as a hand-written test oracle has just been edited. These files are ground truth — they must only change when real VBA/Excel behaviour has been researched and verified independently of any test run:\n- fixtures/expected/*.json  — expected cell values after running a macro\n- packages/ovba/tests/spec-examples.test.ts — MS-OVBA known-answer vectors from the spec\n\nBefore proceeding, explain:\n1. Why this file was edited.\n2. What the old value was and what the new value is.\n3. How you verified the new value is correct (e.g. checked against Excel, traced through the spec, computed by hand).\n\nIf the edit was made solely to make a failing test pass, STOP and revert the change. Fix the implementation to match the oracle, not the other way around."
+      }
+    }
+  ]
+}

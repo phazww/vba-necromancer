@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Test on interpreter change",
+      "trigger": "PostFileSave",
+      "description": "When a source file under packages/*/src/ is saved, run that package's tests and report failures.",
+      "matcher": "packages/([^/]+)/src/.*\\.ts$",
+      "action": {
+        "type": "command",
+        "command": "pkg=$(echo \"$KIRO_FILE_PATH\" | sed 's|.*/packages/\\([^/]*\\)/.*|\\1|'); cd \"$(git rev-parse --show-toplevel)\" && npm test --workspace=\"packages/$pkg\" --if-present 2>&1 | tail -40",
+        "timeout": 120
+      }
+    }
+  ]
+}

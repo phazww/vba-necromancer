@@ -1,0 +1,26 @@
+{
+  "codePage": 1251,
+  "sheets": [
+    {
+      "name": "Журнал",
+      "cells": [
+        { "row": 1, "col": 1, "value": "Дата" },
+        { "row": 1, "col": 2, "value": "Код" },
+        { "row": 1, "col": 3, "value": "Категория" },
+        { "row": 1, "col": 4, "value": "Объём" },
+        { "row": 1, "col": 5, "value": "Норма чел.-ч" },
+        { "row": 1, "col": 6, "value": "Цена" },
+
+        { "row": 2, "col": 1, "value": "01.10.2026" }, { "row": 2, "col": 2, "value": "ТО-01" }, { "row": 2, "col": 3, "value": "ТО" }, { "row": 2, "col": 4, "value": 10 }, { "row": 2, "col": 5, "value": 0.5 }, { "row": 2, "col": 6, "value": 1200 },
+        { "row": 3, "col": 1, "value": "02.10.2026" }, { "row": 3, "col": 2, "value": "ТР-01" }, { "row": 3, "col": 3, "value": "ТР" }, { "row": 3, "col": 4, "value": 2 }, { "row": 3, "col": 5, "value": 6 }, { "row": 3, "col": 6, "value": 18900 },
+        { "row": 4, "col": 1, "value": "03.10.2026" }, { "row": 4, "col": 2, "value": "ТО-02" }, { "row": 4, "col": 3, "value": "ТО " }, { "row": 4, "col": 4, "value": 4 }, { "row": 4, "col": 5, "value": 1.25 }, { "row": 4, "col": 6, "value": 850 },
+        { "row": 5, "col": 1, "value": "05.10.2026" }, { "row": 5, "col": 2, "value": "ТР-02" }, { "row": 5, "col": 3, "value": "ТР" }, { "row": 5, "col": 4, "value": 1.5 }, { "row": 5, "col": 5, "value": 3.2 }, { "row": 5, "col": 6, "value": 5920 },
+        { "row": 6, "col": 1, "value": "06.10.2026" }, { "row": 6, "col": 2, "value": "СВ-01" }, { "row": 6, "col": 3, "value": "СВ" }, { "row": 6, "col": 4, "value": 12 }, { "row": 6, "col": 5, "value": 1.1 }, { "row": 6, "col": 6, "value": 640 },
+        { "row": 7, "col": 1, "value": "07.10.2026" }, { "row": 7, "col": 2, "value": "ТО-01" }, { "row": 7, "col": 3, "value": "ТО" }, { "row": 7, "col": 4, "value": 6 }, { "row": 7, "col": 5, "value": 0.5 }, { "row": 7, "col": 6, "value": 1200 },
+        { "row": 8, "col": 1, "value": "09.10.2026" }, { "row": 8, "col": 2, "value": "СВ-01" }, { "row": 8, "col": 3, "value": "СВ" }, { "row": 8, "col": 4, "value": 3.5 }, { "row": 8, "col": 5, "value": 1.1 }, { "row": 8, "col": 6, "value": 640 },
+        { "row": 9, "col": 1, "value": "12.10.2026" }, { "row": 9, "col": 2, "value": "ТР-01" }, { "row": 9, "col": 3, "value": "ТР" }, { "row": 9, "col": 4, "value": 1 }, { "row": 9, "col": 5, "value": 6 }, { "row": 9, "col": 6, "value": 18900 }
+      ]
+    },
+    { "name": "Акты", "cells": [] }
+  ]
+}

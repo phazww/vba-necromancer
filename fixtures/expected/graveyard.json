@@ -1,0 +1,49 @@
+{
+  "runs": [
+    {
+      "macro": "ExportReport",
+      "status": "partly resurrected",
+      "cells": [
+        { "sheet": "Отчёт", "row": 1, "col": 1, "value": "Отчёт сформирован" },
+        { "sheet": "Отчёт", "row": 2, "col": 1, "value": "после FSO" },
+        { "sheet": "Отчёт", "row": 3, "col": 1, "value": "конец" }
+      ],
+      "empty": [],
+      "unsupported": [
+        { "module": "Module1", "line": 3, "construct": "Declare" },
+        { "module": "Module1", "line": 11, "construct": "CreateObject" },
+        { "module": "Module1", "line": 13, "construct": "Open" },
+        { "module": "Module1", "line": 14, "construct": "Print #" },
+        { "module": "Module1", "line": 15, "construct": "Close" },
+        { "module": "Module1", "line": 22, "construct": "Open" }
+      ]
+    },
+    {
+      "macro": "ExportStrict",
+      "status": "partly resurrected",
+      "cells": [
+        { "sheet": "Отчёт", "row": 1, "col": 2, "value": "до" }
+      ],
+      "empty": [
+        { "sheet": "Отчёт", "row": 2, "col": 2 }
+      ],
+      "unsupported": [
+        { "module": "Module1", "line": 3, "construct": "Declare" },
+        { "module": "Module1", "line": 11, "construct": "CreateObject" },
+        { "module": "Module1", "line": 13, "construct": "Open" },
+        { "module": "Module1", "line": 14, "construct": "Print #" },
+        { "module": "Module1", "line": 15, "construct": "Close" },
+        { "module": "Module1", "line": 22, "construct": "Open" }
+      ],
+      "stoppedAt": { "module": "Module1", "line": 22, "construct": "Open" }
+    }
+  ],
+  "numericTolerance": 1e-9,
+  "notes": [
+    "unsupported is the static list for the whole module, so it is the same in both runs.",
+    "ExportReport: under On Error Resume Next every unsupported statement is recorded as an 'unsupported' trace event and skipped, so A2 and A3 are still written; status is 'partly resurrected' because the trace has unsupported events.",
+    "The module-level Declare is never executed, but it is listed statically, so even a macro that never touches it cannot be 'fully resurrected' if it calls GetTickCount; here neither macro calls it.",
+    "ExportStrict: no On Error, so Open stops the run with UnsupportedError at line 22; B1 is written, B2 stays empty.",
+    "Line numbers are 1-based lines of Module1.bas."
+  ]
+}

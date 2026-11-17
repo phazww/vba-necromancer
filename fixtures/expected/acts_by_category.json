@@ -1,0 +1,47 @@
+{
+  "runs": [
+    {
+      "macro": "BuildActs",
+      "status": "fully resurrected",
+      "cells": [
+        { "sheet": "Акты", "row": 1, "col": 1, "value": "Категория" },
+        { "sheet": "Акты", "row": 1, "col": 2, "value": "Объём" },
+        { "sheet": "Акты", "row": 1, "col": 3, "value": "Чел.-ч" },
+        { "sheet": "Акты", "row": 1, "col": 4, "value": "Сумма" },
+
+        { "sheet": "Акты", "row": 2, "col": 1, "value": "ТО" },
+        { "sheet": "Акты", "row": 2, "col": 2, "value": 20 },
+        { "sheet": "Акты", "row": 2, "col": 3, "value": 13 },
+        { "sheet": "Акты", "row": 2, "col": 4, "value": 22600 },
+
+        { "sheet": "Акты", "row": 3, "col": 1, "value": "ТР" },
+        { "sheet": "Акты", "row": 3, "col": 2, "value": 4.5 },
+        { "sheet": "Акты", "row": 3, "col": 3, "value": 22.8 },
+        { "sheet": "Акты", "row": 3, "col": 4, "value": 65580 },
+
+        { "sheet": "Акты", "row": 4, "col": 1, "value": "СВ" },
+        { "sheet": "Акты", "row": 4, "col": 2, "value": 15.5 },
+        { "sheet": "Акты", "row": 4, "col": 3, "value": 17.05 },
+        { "sheet": "Акты", "row": 4, "col": 4, "value": 9920 },
+
+        { "sheet": "Акты", "row": 5, "col": 1, "value": "Итого" },
+        { "sheet": "Акты", "row": 5, "col": 4, "value": 98100 }
+      ],
+      "empty": [
+        { "sheet": "Акты", "row": 6, "col": 1 },
+        { "sheet": "Акты", "row": 5, "col": 2 }
+      ],
+      "unsupported": []
+    }
+  ],
+  "numericTolerance": 1e-9,
+  "notes": [
+    "Row 4 has category 'ТО ' with a trailing space: Trim must merge it into 'ТО', otherwise a fourth category appears.",
+    "Order of categories is order of first appearance: ТО (row 2), ТР (row 3), СВ (row 6).",
+    "ТО: volume 10+4+6=20; hours 10*0.5+4*1.25+6*0.5=13; amount 12000+3400+7200=22600.",
+    "ТР: volume 2+1.5+1=4.5; hours 12+4.8+6=22.8 (1.5*3.2 is not exact in binary, Round(...,2) gives 22.8); amount 37800+8880+18900=65580.",
+    "СВ: volume 12+3.5=15.5; hours 13.2+3.85=17.05 after Round(...,2); amount 7680+2240=9920.",
+    "Total 22600+65580+9920=98100 via WorksheetFunction.Sum over D2:D4.",
+    "After Exit For the loop variable keeps the index of the match; after a full loop it is n+1, then the code sets k=n."
+  ]
+}

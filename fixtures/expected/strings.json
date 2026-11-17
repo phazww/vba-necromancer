@@ -1,0 +1,36 @@
+{
+  "runs": [
+    {
+      "macro": "StringChecks",
+      "status": "fully resurrected",
+      "cells": [
+        { "sheet": "Строки", "row": 1, "col": 2, "value": "Акт № 10/2 от 31.10.2026" },
+        { "sheet": "Строки", "row": 2, "col": 2, "value": 24 },
+        { "sheet": "Строки", "row": 3, "col": 2, "value": "Акт №" },
+        { "sheet": "Строки", "row": 4, "col": 2, "value": "10/2" },
+        { "sheet": "Строки", "row": 5, "col": 2, "value": 14 },
+        { "sheet": "Строки", "row": 6, "col": 2, "value": "1234,56" },
+        { "sheet": "Строки", "row": 7, "col": 2, "value": "ЗАМЕНИТЬ ПОДШИПНИК" },
+        { "sheet": "Строки", "row": 8, "col": 2, "value": 2 },
+        { "sheet": "Строки", "row": 9, "col": 2, "value": "ТО + ТР + СВ" },
+        { "sheet": "Строки", "row": 10, "col": 2, "value": true },
+        { "sheet": "Строки", "row": 11, "col": 2, "value": 0 },
+        { "sheet": "Строки", "row": 12, "col": 2, "value": "Итого: 98100 руб." },
+        { "sheet": "Строки", "row": 13, "col": 2, "value": false }
+      ],
+      "empty": [ { "sheet": "Строки", "row": 14, "col": 1 } ],
+      "unsupported": []
+    }
+  ],
+  "numericTolerance": 1e-9,
+  "notes": [
+    "Trimmed string 'Акт № 10/2 от 31.10.2026' has 24 characters: 'Акт'(3) + space + '№' + space + '10/2'(4) + space + 'от'(2) + space + '31.10.2026'(10).",
+    "Mid(trimmed, 7, 4): characters 7..10 are '10/2'.",
+    "InStr on the untrimmed string: two leading spaces shift 'от' from position 12 to 14.",
+    "Split returns a 0-based array, so UBound of 3 parts is 2.",
+    "'ТР-01' Like 'ТР-##': '#' matches one digit.",
+    "StrComp with vbTextCompare ignores case: 0. Plain '=' under the default Option Compare Binary is case-sensitive: False.",
+    "Number 98100 converts to '98100' in string concatenation.",
+    "Cyrillic and '№' exist in code page 1251, so this module tests code-page decoding."
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "runs": [
+    {
+      "macro": "NumericChecks",
+      "status": "fully resurrected",
+      "cells": [
+        { "sheet": "Numbers", "row": 1, "col": 1, "value": "CInt(2.5)" },
+        { "sheet": "Numbers", "row": 1, "col": 2, "value": 2 },
+        { "sheet": "Numbers", "row": 2, "col": 2, "value": 4 },
+        { "sheet": "Numbers", "row": 3, "col": 2, "value": -2 },
+        { "sheet": "Numbers", "row": 4, "col": 2, "value": 3 },
+        { "sheet": "Numbers", "row": 5, "col": 2, "value": 4 },
+        { "sheet": "Numbers", "row": 6, "col": 2, "value": -3 },
+        { "sheet": "Numbers", "row": 7, "col": 2, "value": 0 },
+        { "sheet": "Numbers", "row": 8, "col": 2, "value": -1 },
+        { "sheet": "Numbers", "row": 9, "col": 2, "value": 2 },
+        { "sheet": "Numbers", "row": 10, "col": 2, "value": 4 },
+        { "sheet": "Numbers", "row": 11, "col": 2, "value": -3 },
+        { "sheet": "Numbers", "row": 12, "col": 2, "value": -2 },
+        { "sheet": "Numbers", "row": 13, "col": 2, "value": 1024 },
+        { "sheet": "Numbers", "row": 14, "col": 2, "value": 2.5 },
+        { "sheet": "Numbers", "row": 15, "col": 1, "value": "Err after overflow" },
+        { "sheet": "Numbers", "row": 15, "col": 2, "value": 6 },
+        { "sheet": "Numbers", "row": 16, "col": 2, "value": 32767 },
+        { "sheet": "Numbers", "row": 17, "col": 1, "value": "Long 32768" },
+        { "sheet": "Numbers", "row": 17, "col": 2, "value": 32768 }
+      ],
+      "empty": [ { "sheet": "Numbers", "row": 18, "col": 1 } ],
+      "unsupported": []
+    }
+  ],
+  "numericTolerance": 1e-9,
+  "notes": [
+    "CInt/CLng round half to even: CInt(2.5)=2, CInt(3.5)=4, CLng(-2.5)=-2.",
+    "Integer division rounds operands to even first, then truncates toward zero: 7.5\\2 -> 8\\2 = 4; -7\\2 = -3 (unary minus binds first).",
+    "Mod rounds operands to even, sign follows the dividend: 5.5 Mod 2 -> 6 Mod 2 = 0; -7 Mod 3 = -1.",
+    "Round without digits is banker's rounding: Round(2.5)=2, Round(3.5)=4.",
+    "Int floors (-3), Fix truncates (-2).",
+    "i is Integer and 1 is an Integer literal, so i + 1 is evaluated in Integer and overflows with error 6 before the assignment; under On Error Resume Next the statement is skipped and i stays 32767.",
+    "big is Long, so big + 1 is evaluated in Long: 32768, no error."
+  ]
+}

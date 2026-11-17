@@ -1,0 +1,16 @@
+{
+  "codePage": 1251,
+  "sheets": [
+    {
+      "name": "Бригада",
+      "cells": [
+        { "row": 1, "col": 1, "value": "Работник" }, { "row": 1, "col": 2, "value": "Разряд" }, { "row": 1, "col": 3, "value": "Часы" },
+        { "row": 2, "col": 1, "value": "Петров П. П." }, { "row": 2, "col": 2, "value": 5 }, { "row": 2, "col": 3, "value": 168 },
+        { "row": 3, "col": 1, "value": "Сидоров С. С." }, { "row": 3, "col": 2, "value": 3 }, { "row": 3, "col": 3, "value": 152.5 },
+        { "row": 4, "col": 1, "value": "Кузнецов К. К." }, { "row": 4, "col": 2, "value": 6 }, { "row": 4, "col": 3, "value": 176 },
+        { "row": 5, "col": 1, "value": "Смирнов А. А." }, { "row": 5, "col": 2, "value": 4 }, { "row": 5, "col": 3, "value": 0 },
+        { "row": 6, "col": 1, "value": "Орлов О. О." }, { "row": 6, "col": 2, "value": 2 }, { "row": 6, "col": 3, "value": 80 }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "runs": [
+    {
+      "macro": "CalcPay",
+      "status": "fully resurrected",
+      "cells": [
+        { "sheet": "Бригада", "row": 1, "col": 4, "value": "Оклад" },
+        { "sheet": "Бригада", "row": 1, "col": 5, "value": "Премия" },
+        { "sheet": "Бригада", "row": 1, "col": 6, "value": "Итого" },
+
+        { "sheet": "Бригада", "row": 2, "col": 4, "value": 58800 },
+        { "sheet": "Бригада", "row": 2, "col": 5, "value": 5880 },
+        { "sheet": "Бригада", "row": 2, "col": 6, "value": 64680 },
+
+        { "sheet": "Бригада", "row": 3, "col": 4, "value": 42700 },
+        { "sheet": "Бригада", "row": 3, "col": 5, "value": 0 },
+        { "sheet": "Бригада", "row": 3, "col": 6, "value": 42700 },
+
+        { "sheet": "Бригада", "row": 4, "col": 4, "value": 70400 },
+        { "sheet": "Бригада", "row": 4, "col": 5, "value": 7040 },
+        { "sheet": "Бригада", "row": 4, "col": 6, "value": 77440 },
+
+        { "sheet": "Бригада", "row": 5, "col": 4, "value": "не работал" },
+        { "sheet": "Бригада", "row": 5, "col": 5, "value": 0 },
+        { "sheet": "Бригада", "row": 5, "col": 6, "value": 0 },
+
+        { "sheet": "Бригада", "row": 6, "col": 4, "value": 20000 },
+        { "sheet": "Бригада", "row": 6, "col": 5, "value": 0 },
+        { "sheet": "Бригада", "row": 6, "col": 6, "value": 20000 },
+
+        { "sheet": "Бригада", "row": 7, "col": 1, "value": "Итого" },
+        { "sheet": "Бригада", "row": 7, "col": 3, "value": 576.5 },
+        { "sheet": "Бригада", "row": 7, "col": 6, "value": 204820 }
+      ],
+      "empty": [
+        { "sheet": "Бригада", "row": 7, "col": 2 },
+        { "sheet": "Бригада", "row": 8, "col": 1 }
+      ],
+      "unsupported": []
+    }
+  ],
+  "numericTolerance": 1e-9,
+  "notes": [
+    "Rates by grade through Select Case with single-line 'Case n: statement' (colon separator).",
+    "Петров: 168*350=58800, hours>=160 so bonus Round(5880,2)=5880, total 64680.",
+    "Сидоров: 152.5*280=42700, no bonus.",
+    "Кузнецов: 176*400=70400, bonus 7040, total 77440.",
+    "Смирнов: hours 0, text 'не работал', zeros, not added to totalPay.",
+    "Орлов: 80*250=20000.",
+    "Do While stops at the first empty name in column A (row 7). Totals: hours 168+152.5+176+0+80=576.5, pay 64680+42700+77440+20000=204820.",
+    "RateFor takes ByVal grade As Integer from a Double cell value (5 -> 5), testing Variant to Integer coercion."
+  ]
+}

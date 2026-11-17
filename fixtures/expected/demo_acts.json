@@ -1,0 +1,156 @@
+{
+ "runs": [
+  {
+   "macro": "BuildActs",
+   "status": "fully resurrected",
+   "cells": [
+    {
+     "sheet": "Акты",
+     "row": 1,
+     "col": 1,
+     "value": "Категория"
+    },
+    {
+     "sheet": "Акты",
+     "row": 1,
+     "col": 2,
+     "value": "Объём"
+    },
+    {
+     "sheet": "Акты",
+     "row": 1,
+     "col": 3,
+     "value": "Чел.-ч"
+    },
+    {
+     "sheet": "Акты",
+     "row": 1,
+     "col": 4,
+     "value": "Сумма"
+    },
+    {
+     "sheet": "Акты",
+     "row": 2,
+     "col": 1,
+     "value": "Текущий ремонт"
+    },
+    {
+     "sheet": "Акты",
+     "row": 2,
+     "col": 2,
+     "value": 65.0
+    },
+    {
+     "sheet": "Акты",
+     "row": 2,
+     "col": 3,
+     "value": 484.65
+    },
+    {
+     "sheet": "Акты",
+     "row": 2,
+     "col": 4,
+     "value": 1286290.0
+    },
+    {
+     "sheet": "Акты",
+     "row": 3,
+     "col": 1,
+     "value": "Сварочные работы"
+    },
+    {
+     "sheet": "Акты",
+     "row": 3,
+     "col": 2,
+     "value": 21.0
+    },
+    {
+     "sheet": "Акты",
+     "row": 3,
+     "col": 3,
+     "value": 31.5
+    },
+    {
+     "sheet": "Акты",
+     "row": 3,
+     "col": 4,
+     "value": 19560.0
+    },
+    {
+     "sheet": "Акты",
+     "row": 4,
+     "col": 1,
+     "value": "Техническое обслуживание"
+    },
+    {
+     "sheet": "Акты",
+     "row": 4,
+     "col": 2,
+     "value": 52.0
+    },
+    {
+     "sheet": "Акты",
+     "row": 4,
+     "col": 3,
+     "value": 76.4
+    },
+    {
+     "sheet": "Акты",
+     "row": 4,
+     "col": 4,
+     "value": 114830.0
+    },
+    {
+     "sheet": "Акты",
+     "row": 5,
+     "col": 1,
+     "value": "Аварийные работы"
+    },
+    {
+     "sheet": "Акты",
+     "row": 5,
+     "col": 2,
+     "value": 43.0
+    },
+    {
+     "sheet": "Акты",
+     "row": 5,
+     "col": 3,
+     "value": 485.0
+    },
+    {
+     "sheet": "Акты",
+     "row": 5,
+     "col": 4,
+     "value": 928500.0
+    },
+    {
+     "sheet": "Акты",
+     "row": 6,
+     "col": 1,
+     "value": "Итого"
+    },
+    {
+     "sheet": "Акты",
+     "row": 6,
+     "col": 4,
+     "value": 2349180.0
+    }
+   ],
+   "empty": [
+    {
+     "sheet": "Акты",
+     "row": 7,
+     "col": 1
+    }
+   ],
+   "unsupported": []
+  }
+ ],
+ "numericTolerance": 1e-06,
+ "notes": [
+  "Generated with a fixed seed by plain Python; expected values computed independently in Python (round() is banker's rounding like VBA Round, no ties occur here).",
+  "10% of category cells carry a trailing space to exercise Trim.",
+  "Used for the demo video; 'buttons' in cells.json describes the button the builder should place on the sheet."
+ ]
+}

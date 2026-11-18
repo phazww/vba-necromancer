@@ -1,0 +1,138 @@
+{
+  "runs": [
+    {
+      "macro": "BuildActsDict",
+      "status": "fully resurrected",
+      "cells": [
+        {
+          "sheet": "Акты",
+          "row": 1,
+          "col": 1,
+          "value": "Категория"
+        },
+        {
+          "sheet": "Акты",
+          "row": 1,
+          "col": 2,
+          "value": "Объём"
+        },
+        {
+          "sheet": "Акты",
+          "row": 1,
+          "col": 3,
+          "value": "Чел.-ч"
+        },
+        {
+          "sheet": "Акты",
+          "row": 1,
+          "col": 4,
+          "value": "Сумма"
+        },
+        {
+          "sheet": "Акты",
+          "row": 2,
+          "col": 1,
+          "value": "ТО"
+        },
+        {
+          "sheet": "Акты",
+          "row": 2,
+          "col": 2,
+          "value": 20
+        },
+        {
+          "sheet": "Акты",
+          "row": 2,
+          "col": 3,
+          "value": 13
+        },
+        {
+          "sheet": "Акты",
+          "row": 2,
+          "col": 4,
+          "value": 22600
+        },
+        {
+          "sheet": "Акты",
+          "row": 3,
+          "col": 1,
+          "value": "ТР"
+        },
+        {
+          "sheet": "Акты",
+          "row": 3,
+          "col": 2,
+          "value": 4.5
+        },
+        {
+          "sheet": "Акты",
+          "row": 3,
+          "col": 3,
+          "value": 22.8
+        },
+        {
+          "sheet": "Акты",
+          "row": 3,
+          "col": 4,
+          "value": 65580
+        },
+        {
+          "sheet": "Акты",
+          "row": 4,
+          "col": 1,
+          "value": "СВ"
+        },
+        {
+          "sheet": "Акты",
+          "row": 4,
+          "col": 2,
+          "value": 15.5
+        },
+        {
+          "sheet": "Акты",
+          "row": 4,
+          "col": 3,
+          "value": 17.05
+        },
+        {
+          "sheet": "Акты",
+          "row": 4,
+          "col": 4,
+          "value": 9920
+        },
+        {
+          "sheet": "Акты",
+          "row": 5,
+          "col": 1,
+          "value": "Итого"
+        },
+        {
+          "sheet": "Акты",
+          "row": 5,
+          "col": 4,
+          "value": 98100
+        }
+      ],
+      "empty": [
+        {
+          "sheet": "Акты",
+          "row": 6,
+          "col": 1
+        },
+        {
+          "sheet": "Акты",
+          "row": 5,
+          "col": 2
+        }
+      ],
+      "unsupported": []
+    }
+  ],
+  "numericTolerance": 1e-09,
+  "notes": [
+    "Same journal and the same expected sheet as acts_by_category, computed with three Scripting.Dictionary objects instead of arrays (spec .kiro/specs/scripting-dictionary).",
+    "Keys() keeps insertion order, so the categories come out as ТО, ТР, СВ, like the array version.",
+    "Total is the sum of rounded amounts accumulated in a Double, 98100, the same as WorksheetFunction.Sum in the array version.",
+    "Status must be fully resurrected: CreateObject(\"Scripting.Dictionary\") is supported by the shim; any other ProgID stays unsupported."
+  ]
+}

@@ -20,7 +20,7 @@ export function DemoButtons() {
           </button>
         ))}
       </div>
-      <p class="muted">Both samples are made-up data. They are built into this page, nothing is downloaded.</p>
+      <p class="muted">All samples are made-up data, built into this page. The Russian one is the same job with Cyrillic text in code page 1251</p>
     </section>
   );
 }

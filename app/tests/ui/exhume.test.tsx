@@ -25,7 +25,7 @@ const rowOf = (id: string): HTMLElement => {
 
 describe("exhume panel: demo_acts", () => {
   it("lists sheets with sizes, the module and a fully predicted macro", async () => {
-    await loadDemo("Try the demo", "demo_acts.xlsm");
+    await loadDemo("Try a Russian workbook", "demo_acts.xlsm");
     const exhumePanel = screen.getByRole("region", { name: "Exhume" });
     expect(within(exhumePanel).getByText("Журнал")).toBeTruthy();
     expect(within(exhumePanel).getByText("Акты")).toBeTruthy();
@@ -111,7 +111,7 @@ describe("exhume panel: files without macros", () => {
 
 describe("run buttons", () => {
   it("have the macro id in their accessible name", async () => {
-    await loadDemo("Try the demo", "demo_acts.xlsm");
+    await loadDemo("Try a Russian workbook", "demo_acts.xlsm");
     expect(screen.getByRole("button", { name: "Run Module1.BuildActs" }).textContent).toBe("Run");
   });
 

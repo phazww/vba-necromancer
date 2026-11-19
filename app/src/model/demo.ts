@@ -1,4 +1,5 @@
 import demoActs from "../../../fixtures/build/demo_acts.xlsm?inline";
+import demoInvoice from "../../../fixtures/build/demo_invoice.xlsm?inline";
 import graveyard from "../../../fixtures/build/graveyard.xlsm?inline";
 
 export interface Demo {
@@ -18,7 +19,18 @@ export function decodeDataUrl(url: string): Uint8Array {
 }
 
 export const DEMOS: readonly Demo[] = [
-  { id: "demo_acts", title: "Try the demo", fileName: "demo_acts.xlsm", bytes: () => decodeDataUrl(demoActs) },
+  {
+    id: "demo_invoice",
+    title: "Try the demo",
+    fileName: "demo_invoice.xlsm",
+    bytes: () => decodeDataUrl(demoInvoice),
+  },
+  {
+    id: "demo_acts",
+    title: "Try a Russian workbook",
+    fileName: "demo_acts.xlsm",
+    bytes: () => decodeDataUrl(demoActs),
+  },
   {
     id: "graveyard",
     title: "Try the graveyard sample",

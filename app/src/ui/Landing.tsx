@@ -1,12 +1,12 @@
 import { DemoButtons } from "./DemoButtons";
 import { DropZone } from "./DropZone";
 
-/** The "Акты" sheet of the built-in demo after BuildActs ran (fixtures/expected/demo_acts.json). */
+/** The "Invoice" sheet of the built-in demo after BuildInvoice ran (fixtures/expected/demo_invoice.json). */
 const ACTS: ReadonlyArray<readonly [string, string, string, string]> = [
-  ["Текущий ремонт", "65", "484.65", "1286290"],
-  ["Сварочные работы", "21", "31.5", "19560"],
-  ["Техническое обслуживание", "52", "76.4", "114830"],
-  ["Аварийные работы", "43", "485", "928500"],
+  ["Repairs", "65", "484.65", "1286290"],
+  ["Welding", "21", "31.5", "19560"],
+  ["Maintenance", "52", "76.4", "114830"],
+  ["Emergency call-outs", "43", "485", "928500"],
 ];
 
 /**
@@ -18,11 +18,11 @@ function ResultPreview() {
     <figure class="preview">
       <div class="preview-window" aria-hidden="true">
         <div class="preview-bar">
-          <span class="preview-file">Sheet Акты</span>
+          <span class="preview-file">Sheet Invoice</span>
           <span class="preview-sheet">after the run</span>
         </div>
         <div class="preview-code">
-          <span class="kw">Sub</span> BuildActs()
+          <span class="kw">Sub</span> BuildInvoice()
           <span class="preview-status">
             <span class="shape shape--fully" />
             Fully resurrected
@@ -31,10 +31,10 @@ function ResultPreview() {
         <table class="preview-table">
           <thead>
             <tr>
-              <th>Категория</th>
-              <th>Объём</th>
-              <th>Чел.-ч</th>
-              <th>Сумма</th>
+              <th>Category</th>
+              <th>Qty</th>
+              <th>Labour hours</th>
+              <th>Amount</th>
             </tr>
           </thead>
           <tbody>
@@ -47,7 +47,7 @@ function ResultPreview() {
               </tr>
             ))}
             <tr class="total">
-              <td>Итого</td>
+              <td>Total</td>
               <td />
               <td />
               <td class="num">2349180</td>

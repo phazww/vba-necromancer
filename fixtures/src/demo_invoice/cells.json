@@ -1,0 +1,1252 @@
+{
+ "codePage": 1252,
+ "sheets": [
+  {
+   "name": "Log",
+   "cells": [
+    {
+     "row": 1,
+     "col": 1,
+     "value": "Date"
+    },
+    {
+     "row": 1,
+     "col": 2,
+     "value": "Code"
+    },
+    {
+     "row": 1,
+     "col": 3,
+     "value": "Category"
+    },
+    {
+     "row": 1,
+     "col": 4,
+     "value": "Qty"
+    },
+    {
+     "row": 1,
+     "col": 5,
+     "value": "Hours per unit"
+    },
+    {
+     "row": 1,
+     "col": 6,
+     "value": "Rate"
+    },
+    {
+     "row": 2,
+     "col": 1,
+     "value": "2026-10-01"
+    },
+    {
+     "row": 2,
+     "col": 2,
+     "value": "RP-02"
+    },
+    {
+     "row": 2,
+     "col": 3,
+     "value": "Repairs"
+    },
+    {
+     "row": 2,
+     "col": 4,
+     "value": 0.5
+    },
+    {
+     "row": 2,
+     "col": 5,
+     "value": 3.2
+    },
+    {
+     "row": 2,
+     "col": 6,
+     "value": 5920
+    },
+    {
+     "row": 3,
+     "col": 1,
+     "value": "2026-10-01"
+    },
+    {
+     "row": 3,
+     "col": 2,
+     "value": "WD-01"
+    },
+    {
+     "row": 3,
+     "col": 3,
+     "value": "Welding "
+    },
+    {
+     "row": 3,
+     "col": 4,
+     "value": 1
+    },
+    {
+     "row": 3,
+     "col": 5,
+     "value": 1.1
+    },
+    {
+     "row": 3,
+     "col": 6,
+     "value": 640
+    },
+    {
+     "row": 4,
+     "col": 1,
+     "value": "2026-10-02"
+    },
+    {
+     "row": 4,
+     "col": 2,
+     "value": "RP-01"
+    },
+    {
+     "row": 4,
+     "col": 3,
+     "value": "Repairs"
+    },
+    {
+     "row": 4,
+     "col": 4,
+     "value": 2.5
+    },
+    {
+     "row": 4,
+     "col": 5,
+     "value": 6.5
+    },
+    {
+     "row": 4,
+     "col": 6,
+     "value": 18900
+    },
+    {
+     "row": 5,
+     "col": 1,
+     "value": "2026-10-03"
+    },
+    {
+     "row": 5,
+     "col": 2,
+     "value": "MT-03"
+    },
+    {
+     "row": 5,
+     "col": 3,
+     "value": "Maintenance"
+    },
+    {
+     "row": 5,
+     "col": 4,
+     "value": 10
+    },
+    {
+     "row": 5,
+     "col": 5,
+     "value": 2.4
+    },
+    {
+     "row": 5,
+     "col": 6,
+     "value": 3360
+    },
+    {
+     "row": 6,
+     "col": 1,
+     "value": "2026-10-04"
+    },
+    {
+     "row": 6,
+     "col": 2,
+     "value": "EM-02"
+    },
+    {
+     "row": 6,
+     "col": 3,
+     "value": "Emergency call-outs "
+    },
+    {
+     "row": 6,
+     "col": 4,
+     "value": 2.5
+    },
+    {
+     "row": 6,
+     "col": 5,
+     "value": 8
+    },
+    {
+     "row": 6,
+     "col": 6,
+     "value": 15800
+    },
+    {
+     "row": 7,
+     "col": 1,
+     "value": "2026-10-04"
+    },
+    {
+     "row": 7,
+     "col": 2,
+     "value": "MT-02"
+    },
+    {
+     "row": 7,
+     "col": 3,
+     "value": "Maintenance"
+    },
+    {
+     "row": 7,
+     "col": 4,
+     "value": 6
+    },
+    {
+     "row": 7,
+     "col": 5,
+     "value": 0.25
+    },
+    {
+     "row": 7,
+     "col": 6,
+     "value": 520
+    },
+    {
+     "row": 8,
+     "col": 1,
+     "value": "2026-10-05"
+    },
+    {
+     "row": 8,
+     "col": 2,
+     "value": "MT-03"
+    },
+    {
+     "row": 8,
+     "col": 3,
+     "value": "Maintenance"
+    },
+    {
+     "row": 8,
+     "col": 4,
+     "value": 5
+    },
+    {
+     "row": 8,
+     "col": 5,
+     "value": 2.4
+    },
+    {
+     "row": 8,
+     "col": 6,
+     "value": 3360
+    },
+    {
+     "row": 9,
+     "col": 1,
+     "value": "2026-10-06"
+    },
+    {
+     "row": 9,
+     "col": 2,
+     "value": "RP-03"
+    },
+    {
+     "row": 9,
+     "col": 3,
+     "value": "Repairs"
+    },
+    {
+     "row": 9,
+     "col": 4,
+     "value": 2.5
+    },
+    {
+     "row": 9,
+     "col": 5,
+     "value": 12
+    },
+    {
+     "row": 9,
+     "col": 6,
+     "value": 31200
+    },
+    {
+     "row": 10,
+     "col": 1,
+     "value": "2026-10-07"
+    },
+    {
+     "row": 10,
+     "col": 2,
+     "value": "MT-02"
+    },
+    {
+     "row": 10,
+     "col": 3,
+     "value": "Maintenance "
+    },
+    {
+     "row": 10,
+     "col": 4,
+     "value": 2
+    },
+    {
+     "row": 10,
+     "col": 5,
+     "value": 0.25
+    },
+    {
+     "row": 10,
+     "col": 6,
+     "value": 520
+    },
+    {
+     "row": 11,
+     "col": 1,
+     "value": "2026-10-07"
+    },
+    {
+     "row": 11,
+     "col": 2,
+     "value": "WD-01"
+    },
+    {
+     "row": 11,
+     "col": 3,
+     "value": "Welding"
+    },
+    {
+     "row": 11,
+     "col": 4,
+     "value": 8
+    },
+    {
+     "row": 11,
+     "col": 5,
+     "value": 1.1
+    },
+    {
+     "row": 11,
+     "col": 6,
+     "value": 640
+    },
+    {
+     "row": 12,
+     "col": 1,
+     "value": "2026-10-08"
+    },
+    {
+     "row": 12,
+     "col": 2,
+     "value": "RP-03"
+    },
+    {
+     "row": 12,
+     "col": 3,
+     "value": "Repairs"
+    },
+    {
+     "row": 12,
+     "col": 4,
+     "value": 5
+    },
+    {
+     "row": 12,
+     "col": 5,
+     "value": 12
+    },
+    {
+     "row": 12,
+     "col": 6,
+     "value": 31200
+    },
+    {
+     "row": 13,
+     "col": 1,
+     "value": "2026-10-09"
+    },
+    {
+     "row": 13,
+     "col": 2,
+     "value": "RP-03"
+    },
+    {
+     "row": 13,
+     "col": 3,
+     "value": "Repairs"
+    },
+    {
+     "row": 13,
+     "col": 4,
+     "value": 4
+    },
+    {
+     "row": 13,
+     "col": 5,
+     "value": 12
+    },
+    {
+     "row": 13,
+     "col": 6,
+     "value": 31200
+    },
+    {
+     "row": 14,
+     "col": 1,
+     "value": "2026-10-10"
+    },
+    {
+     "row": 14,
+     "col": 2,
+     "value": "MT-02"
+    },
+    {
+     "row": 14,
+     "col": 3,
+     "value": "Maintenance"
+    },
+    {
+     "row": 14,
+     "col": 4,
+     "value": 3
+    },
+    {
+     "row": 14,
+     "col": 5,
+     "value": 0.25
+    },
+    {
+     "row": 14,
+     "col": 6,
+     "value": 520
+    },
+    {
+     "row": 15,
+     "col": 1,
+     "value": "2026-10-10"
+    },
+    {
+     "row": 15,
+     "col": 2,
+     "value": "MT-03"
+    },
+    {
+     "row": 15,
+     "col": 3,
+     "value": "Maintenance "
+    },
+    {
+     "row": 15,
+     "col": 4,
+     "value": 1.5
+    },
+    {
+     "row": 15,
+     "col": 5,
+     "value": 2.4
+    },
+    {
+     "row": 15,
+     "col": 6,
+     "value": 3360
+    },
+    {
+     "row": 16,
+     "col": 1,
+     "value": "2026-10-11"
+    },
+    {
+     "row": 16,
+     "col": 2,
+     "value": "RP-02"
+    },
+    {
+     "row": 16,
+     "col": 3,
+     "value": "Repairs"
+    },
+    {
+     "row": 16,
+     "col": 4,
+     "value": 1.5
+    },
+    {
+     "row": 16,
+     "col": 5,
+     "value": 3.2
+    },
+    {
+     "row": 16,
+     "col": 6,
+     "value": 5920
+    },
+    {
+     "row": 17,
+     "col": 1,
+     "value": "2026-10-12"
+    },
+    {
+     "row": 17,
+     "col": 2,
+     "value": "EM-02"
+    },
+    {
+     "row": 17,
+     "col": 3,
+     "value": "Emergency call-outs"
+    },
+    {
+     "row": 17,
+     "col": 4,
+     "value": 12
+    },
+    {
+     "row": 17,
+     "col": 5,
+     "value": 8
+    },
+    {
+     "row": 17,
+     "col": 6,
+     "value": 15800
+    },
+    {
+     "row": 18,
+     "col": 1,
+     "value": "2026-10-13"
+    },
+    {
+     "row": 18,
+     "col": 2,
+     "value": "RP-01"
+    },
+    {
+     "row": 18,
+     "col": 3,
+     "value": "Repairs"
+    },
+    {
+     "row": 18,
+     "col": 4,
+     "value": 8
+    },
+    {
+     "row": 18,
+     "col": 5,
+     "value": 6.5
+    },
+    {
+     "row": 18,
+     "col": 6,
+     "value": 18900
+    },
+    {
+     "row": 19,
+     "col": 1,
+     "value": "2026-10-13"
+    },
+    {
+     "row": 19,
+     "col": 2,
+     "value": "RP-01"
+    },
+    {
+     "row": 19,
+     "col": 3,
+     "value": "Repairs"
+    },
+    {
+     "row": 19,
+     "col": 4,
+     "value": 2
+    },
+    {
+     "row": 19,
+     "col": 5,
+     "value": 6.5
+    },
+    {
+     "row": 19,
+     "col": 6,
+     "value": 18900
+    },
+    {
+     "row": 20,
+     "col": 1,
+     "value": "2026-10-14"
+    },
+    {
+     "row": 20,
+     "col": 2,
+     "value": "EM-01"
+    },
+    {
+     "row": 20,
+     "col": 3,
+     "value": "Emergency call-outs"
+    },
+    {
+     "row": 20,
+     "col": 4,
+     "value": 1.5
+    },
+    {
+     "row": 20,
+     "col": 5,
+     "value": 14
+    },
+    {
+     "row": 20,
+     "col": 6,
+     "value": 26400
+    },
+    {
+     "row": 21,
+     "col": 1,
+     "value": "2026-10-15"
+    },
+    {
+     "row": 21,
+     "col": 2,
+     "value": "MT-01"
+    },
+    {
+     "row": 21,
+     "col": 3,
+     "value": "Maintenance"
+    },
+    {
+     "row": 21,
+     "col": 4,
+     "value": 12
+    },
+    {
+     "row": 21,
+     "col": 5,
+     "value": 0.75
+    },
+    {
+     "row": 21,
+     "col": 6,
+     "value": 1450
+    },
+    {
+     "row": 22,
+     "col": 1,
+     "value": "2026-10-16"
+    },
+    {
+     "row": 22,
+     "col": 2,
+     "value": "RP-03"
+    },
+    {
+     "row": 22,
+     "col": 3,
+     "value": "Repairs"
+    },
+    {
+     "row": 22,
+     "col": 4,
+     "value": 8
+    },
+    {
+     "row": 22,
+     "col": 5,
+     "value": 12
+    },
+    {
+     "row": 22,
+     "col": 6,
+     "value": 31200
+    },
+    {
+     "row": 23,
+     "col": 1,
+     "value": "2026-10-16"
+    },
+    {
+     "row": 23,
+     "col": 2,
+     "value": "RP-01"
+    },
+    {
+     "row": 23,
+     "col": 3,
+     "value": "Repairs "
+    },
+    {
+     "row": 23,
+     "col": 4,
+     "value": 10
+    },
+    {
+     "row": 23,
+     "col": 5,
+     "value": 6.5
+    },
+    {
+     "row": 23,
+     "col": 6,
+     "value": 18900
+    },
+    {
+     "row": 24,
+     "col": 1,
+     "value": "2026-10-17"
+    },
+    {
+     "row": 24,
+     "col": 2,
+     "value": "EM-01"
+    },
+    {
+     "row": 24,
+     "col": 3,
+     "value": "Emergency call-outs"
+    },
+    {
+     "row": 24,
+     "col": 4,
+     "value": 2.5
+    },
+    {
+     "row": 24,
+     "col": 5,
+     "value": 14
+    },
+    {
+     "row": 24,
+     "col": 6,
+     "value": 26400
+    },
+    {
+     "row": 25,
+     "col": 1,
+     "value": "2026-10-18"
+    },
+    {
+     "row": 25,
+     "col": 2,
+     "value": "WD-02"
+    },
+    {
+     "row": 25,
+     "col": 3,
+     "value": "Welding"
+    },
+    {
+     "row": 25,
+     "col": 4,
+     "value": 12
+    },
+    {
+     "row": 25,
+     "col": 5,
+     "value": 1.8
+    },
+    {
+     "row": 25,
+     "col": 6,
+     "value": 1150
+    },
+    {
+     "row": 26,
+     "col": 1,
+     "value": "2026-10-19"
+    },
+    {
+     "row": 26,
+     "col": 2,
+     "value": "EM-01"
+    },
+    {
+     "row": 26,
+     "col": 3,
+     "value": "Emergency call-outs"
+    },
+    {
+     "row": 26,
+     "col": 4,
+     "value": 10
+    },
+    {
+     "row": 26,
+     "col": 5,
+     "value": 14
+    },
+    {
+     "row": 26,
+     "col": 6,
+     "value": 26400
+    },
+    {
+     "row": 27,
+     "col": 1,
+     "value": "2026-10-19"
+    },
+    {
+     "row": 27,
+     "col": 2,
+     "value": "EM-02"
+    },
+    {
+     "row": 27,
+     "col": 3,
+     "value": "Emergency call-outs "
+    },
+    {
+     "row": 27,
+     "col": 4,
+     "value": 5
+    },
+    {
+     "row": 27,
+     "col": 5,
+     "value": 8
+    },
+    {
+     "row": 27,
+     "col": 6,
+     "value": 15800
+    },
+    {
+     "row": 28,
+     "col": 1,
+     "value": "2026-10-20"
+    },
+    {
+     "row": 28,
+     "col": 2,
+     "value": "MT-03"
+    },
+    {
+     "row": 28,
+     "col": 3,
+     "value": "Maintenance "
+    },
+    {
+     "row": 28,
+     "col": 4,
+     "value": 1
+    },
+    {
+     "row": 28,
+     "col": 5,
+     "value": 2.4
+    },
+    {
+     "row": 28,
+     "col": 6,
+     "value": 3360
+    },
+    {
+     "row": 29,
+     "col": 1,
+     "value": "2026-10-21"
+    },
+    {
+     "row": 29,
+     "col": 2,
+     "value": "MT-01"
+    },
+    {
+     "row": 29,
+     "col": 3,
+     "value": "Maintenance"
+    },
+    {
+     "row": 29,
+     "col": 4,
+     "value": 1.5
+    },
+    {
+     "row": 29,
+     "col": 5,
+     "value": 0.75
+    },
+    {
+     "row": 29,
+     "col": 6,
+     "value": 1450
+    },
+    {
+     "row": 30,
+     "col": 1,
+     "value": "2026-10-22"
+    },
+    {
+     "row": 30,
+     "col": 2,
+     "value": "MT-01"
+    },
+    {
+     "row": 30,
+     "col": 3,
+     "value": "Maintenance"
+    },
+    {
+     "row": 30,
+     "col": 4,
+     "value": 1.5
+    },
+    {
+     "row": 30,
+     "col": 5,
+     "value": 0.75
+    },
+    {
+     "row": 30,
+     "col": 6,
+     "value": 1450
+    },
+    {
+     "row": 31,
+     "col": 1,
+     "value": "2026-10-22"
+    },
+    {
+     "row": 31,
+     "col": 2,
+     "value": "RP-02"
+    },
+    {
+     "row": 31,
+     "col": 3,
+     "value": "Repairs"
+    },
+    {
+     "row": 31,
+     "col": 4,
+     "value": 4
+    },
+    {
+     "row": 31,
+     "col": 5,
+     "value": 3.2
+    },
+    {
+     "row": 31,
+     "col": 6,
+     "value": 5920
+    },
+    {
+     "row": 32,
+     "col": 1,
+     "value": "2026-10-23"
+    },
+    {
+     "row": 32,
+     "col": 2,
+     "value": "RP-01"
+    },
+    {
+     "row": 32,
+     "col": 3,
+     "value": "Repairs"
+    },
+    {
+     "row": 32,
+     "col": 4,
+     "value": 8
+    },
+    {
+     "row": 32,
+     "col": 5,
+     "value": 6.5
+    },
+    {
+     "row": 32,
+     "col": 6,
+     "value": 18900
+    },
+    {
+     "row": 33,
+     "col": 1,
+     "value": "2026-10-24"
+    },
+    {
+     "row": 33,
+     "col": 2,
+     "value": "RP-03"
+    },
+    {
+     "row": 33,
+     "col": 3,
+     "value": "Repairs"
+    },
+    {
+     "row": 33,
+     "col": 4,
+     "value": 0.5
+    },
+    {
+     "row": 33,
+     "col": 5,
+     "value": 12
+    },
+    {
+     "row": 33,
+     "col": 6,
+     "value": 31200
+    },
+    {
+     "row": 34,
+     "col": 1,
+     "value": "2026-10-25"
+    },
+    {
+     "row": 34,
+     "col": 2,
+     "value": "RP-02"
+    },
+    {
+     "row": 34,
+     "col": 3,
+     "value": "Repairs"
+    },
+    {
+     "row": 34,
+     "col": 4,
+     "value": 2.5
+    },
+    {
+     "row": 34,
+     "col": 5,
+     "value": 3.2
+    },
+    {
+     "row": 34,
+     "col": 6,
+     "value": 5920
+    },
+    {
+     "row": 35,
+     "col": 1,
+     "value": "2026-10-25"
+    },
+    {
+     "row": 35,
+     "col": 2,
+     "value": "EM-01"
+    },
+    {
+     "row": 35,
+     "col": 3,
+     "value": "Emergency call-outs"
+    },
+    {
+     "row": 35,
+     "col": 4,
+     "value": 4
+    },
+    {
+     "row": 35,
+     "col": 5,
+     "value": 14
+    },
+    {
+     "row": 35,
+     "col": 6,
+     "value": 26400
+    },
+    {
+     "row": 36,
+     "col": 1,
+     "value": "2026-10-26"
+    },
+    {
+     "row": 36,
+     "col": 2,
+     "value": "MT-03"
+    },
+    {
+     "row": 36,
+     "col": 3,
+     "value": "Maintenance"
+    },
+    {
+     "row": 36,
+     "col": 4,
+     "value": 6
+    },
+    {
+     "row": 36,
+     "col": 5,
+     "value": 2.4
+    },
+    {
+     "row": 36,
+     "col": 6,
+     "value": 3360
+    },
+    {
+     "row": 37,
+     "col": 1,
+     "value": "2026-10-27"
+    },
+    {
+     "row": 37,
+     "col": 2,
+     "value": "EM-01"
+    },
+    {
+     "row": 37,
+     "col": 3,
+     "value": "Emergency call-outs "
+    },
+    {
+     "row": 37,
+     "col": 4,
+     "value": 1
+    },
+    {
+     "row": 37,
+     "col": 5,
+     "value": 14
+    },
+    {
+     "row": 37,
+     "col": 6,
+     "value": 26400
+    },
+    {
+     "row": 38,
+     "col": 1,
+     "value": "2026-10-28"
+    },
+    {
+     "row": 38,
+     "col": 2,
+     "value": "RP-02"
+    },
+    {
+     "row": 38,
+     "col": 3,
+     "value": "Repairs"
+    },
+    {
+     "row": 38,
+     "col": 4,
+     "value": 6
+    },
+    {
+     "row": 38,
+     "col": 5,
+     "value": 3.2
+    },
+    {
+     "row": 38,
+     "col": 6,
+     "value": 5920
+    },
+    {
+     "row": 39,
+     "col": 1,
+     "value": "2026-10-28"
+    },
+    {
+     "row": 39,
+     "col": 2,
+     "value": "EM-01"
+    },
+    {
+     "row": 39,
+     "col": 3,
+     "value": "Emergency call-outs"
+    },
+    {
+     "row": 39,
+     "col": 4,
+     "value": 1.5
+    },
+    {
+     "row": 39,
+     "col": 5,
+     "value": 14
+    },
+    {
+     "row": 39,
+     "col": 6,
+     "value": 26400
+    },
+    {
+     "row": 40,
+     "col": 1,
+     "value": "2026-10-29"
+    },
+    {
+     "row": 40,
+     "col": 2,
+     "value": "MT-03"
+    },
+    {
+     "row": 40,
+     "col": 3,
+     "value": "Maintenance"
+    },
+    {
+     "row": 40,
+     "col": 4,
+     "value": 2.5
+    },
+    {
+     "row": 40,
+     "col": 5,
+     "value": 2.4
+    },
+    {
+     "row": 40,
+     "col": 6,
+     "value": 3360
+    },
+    {
+     "row": 41,
+     "col": 1,
+     "value": "2026-10-30"
+    },
+    {
+     "row": 41,
+     "col": 2,
+     "value": "EM-01"
+    },
+    {
+     "row": 41,
+     "col": 3,
+     "value": "Emergency call-outs"
+    },
+    {
+     "row": 41,
+     "col": 4,
+     "value": 3
+    },
+    {
+     "row": 41,
+     "col": 5,
+     "value": 14
+    },
+    {
+     "row": 41,
+     "col": 6,
+     "value": 26400
+    }
+   ]
+  },
+  {
+   "name": "Invoice",
+   "cells": []
+  }
+ ],
+ "buttons": [
+  {
+   "sheet": "Log",
+   "text": "Build invoice",
+   "macro": "BuildInvoice",
+   "anchor": "H2"
+  }
+ ]
+}

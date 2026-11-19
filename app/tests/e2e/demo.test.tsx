@@ -40,7 +40,7 @@ describe("demo_acts through the UI", () => {
     const { container } = render(<App deps={{ saveBlob }} />);
 
     // 1. Exhume
-    fireEvent.click(screen.getByRole("button", { name: "Try the demo" }));
+    fireEvent.click(screen.getByRole("button", { name: "Try a Russian workbook" }));
     expect(screen.getByRole("status").textContent).toBe("Exhuming");
     const exhumePanel = await screen.findByRole("region", { name: "Exhume" });
     expect(screen.getByRole("status").textContent).toBe("");

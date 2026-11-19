@@ -1,0 +1,155 @@
+{
+ "runs": [
+  {
+   "macro": "BuildInvoice",
+   "status": "fully resurrected",
+   "cells": [
+    {
+     "sheet": "Invoice",
+     "row": 1,
+     "col": 1,
+     "value": "Category"
+    },
+    {
+     "sheet": "Invoice",
+     "row": 1,
+     "col": 2,
+     "value": "Qty"
+    },
+    {
+     "sheet": "Invoice",
+     "row": 1,
+     "col": 3,
+     "value": "Labour hours"
+    },
+    {
+     "sheet": "Invoice",
+     "row": 1,
+     "col": 4,
+     "value": "Amount"
+    },
+    {
+     "sheet": "Invoice",
+     "row": 2,
+     "col": 1,
+     "value": "Repairs"
+    },
+    {
+     "sheet": "Invoice",
+     "row": 2,
+     "col": 2,
+     "value": 65.0
+    },
+    {
+     "sheet": "Invoice",
+     "row": 2,
+     "col": 3,
+     "value": 484.65
+    },
+    {
+     "sheet": "Invoice",
+     "row": 2,
+     "col": 4,
+     "value": 1286290.0
+    },
+    {
+     "sheet": "Invoice",
+     "row": 3,
+     "col": 1,
+     "value": "Welding"
+    },
+    {
+     "sheet": "Invoice",
+     "row": 3,
+     "col": 2,
+     "value": 21.0
+    },
+    {
+     "sheet": "Invoice",
+     "row": 3,
+     "col": 3,
+     "value": 31.5
+    },
+    {
+     "sheet": "Invoice",
+     "row": 3,
+     "col": 4,
+     "value": 19560.0
+    },
+    {
+     "sheet": "Invoice",
+     "row": 4,
+     "col": 1,
+     "value": "Maintenance"
+    },
+    {
+     "sheet": "Invoice",
+     "row": 4,
+     "col": 2,
+     "value": 52.0
+    },
+    {
+     "sheet": "Invoice",
+     "row": 4,
+     "col": 3,
+     "value": 76.4
+    },
+    {
+     "sheet": "Invoice",
+     "row": 4,
+     "col": 4,
+     "value": 114830.0
+    },
+    {
+     "sheet": "Invoice",
+     "row": 5,
+     "col": 1,
+     "value": "Emergency call-outs"
+    },
+    {
+     "sheet": "Invoice",
+     "row": 5,
+     "col": 2,
+     "value": 43.0
+    },
+    {
+     "sheet": "Invoice",
+     "row": 5,
+     "col": 3,
+     "value": 485.0
+    },
+    {
+     "sheet": "Invoice",
+     "row": 5,
+     "col": 4,
+     "value": 928500.0
+    },
+    {
+     "sheet": "Invoice",
+     "row": 6,
+     "col": 1,
+     "value": "Total"
+    },
+    {
+     "sheet": "Invoice",
+     "row": 6,
+     "col": 4,
+     "value": 2349180.0
+    }
+   ],
+   "empty": [
+    {
+     "sheet": "Invoice",
+     "row": 7,
+     "col": 1
+    }
+   ],
+   "unsupported": []
+  }
+ ],
+ "numericTolerance": 1e-06,
+ "notes": [
+  "English twin of demo_acts: same input numbers, strings translated, dates as ISO text, code page 1252.",
+  "Expected values recomputed in plain Python from fixtures/src/demo_invoice/cells.json (round() is banker's rounding like VBA Round, no ties occur here), then checked against fixtures/expected/demo_acts.json number for number."
+ ]
+}

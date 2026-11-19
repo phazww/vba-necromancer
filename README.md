@@ -21,9 +21,9 @@ Millions of business workbooks still depend on VBA: monthly acts, labour stateme
 | VBA lexer | done | property test: never throws on arbitrary input |
 | VBA parser | done | parses every fixture module; unsupported statements become AST nodes with line numbers |
 | VBA numeric semantics | done | `CInt`/`CLng`/`Round` banker's rounding on the stored double (`Round(2.675, 2) = 2.67` as in VBA), `\` and `Mod` operand rounding, Integer overflow = error 6, VBA Date epoch 1899-12-30 |
-| Interpreter, `Range`/`Cells`, execution trace | done for the fixture subset | all seven fixture workbooks match their hand-written expected results in `fixtures/expected/` |
+| Interpreter, `Range`/`Cells`, execution trace | done for the fixture subset | all eight fixture workbooks match their hand-written expected results in `fixtures/expected/` |
 | `Scripting.Dictionary` (`CreateObject` and `New`) | done | unit and property tests; `dictionary_grouping` fixture matches its hand-written oracle and the array version cell by cell. Details: `docs/scripting-dictionary.md` |
-| Browser UI | works end to end | drop or choose a file (or use the two built-in samples), list sheets, modules and macros with a prediction from the static scan, run a macro, see changed cells in the grid, the trace, the graveyard and the VBA source, download the result as `.xlsx`. Tested with component tests, two end-to-end tests that drive the DOM, axe checks, performance budgets and a build test. `docs/ui-checklist.md` lists what still needs a person: real keyboard and screen reader walk, 375 px, light and dark, offline reload, the download opened in Excel or LibreOffice |
+| Browser UI | works end to end | drop or choose a file (or use the three built-in samples: an English demo, the same job as a Russian workbook in code page 1251, and the graveyard), list sheets, modules and macros with a prediction from the static scan, run a macro, see changed cells in the grid, the trace, the graveyard and the VBA source, download the result as `.xlsx`. Tested with component tests, two end-to-end tests that drive the DOM, axe checks, performance budgets and a build test. `docs/ui-checklist.md` lists what still needs a person: real keyboard and screen reader walk, 375 px, light and dark, offline reload, the download opened in Excel or LibreOffice |
 
 What the UI does not do yet: it does not read the buttons drawn on a sheet (macros are listed and run from a list), it cannot read VBA from legacy `.xls` files (the sheets open, the macros do not), it does not recalculate formulas (cached values are shown), and it does not apply number formats (dates and currency show as stored numbers). The same list is in the app, under "What this does not do yet". One performance budget is not met: running `BuildActs` on the 40-row demo takes 95 to 150 ms instead of under 100 ms, because of a scan in `packages/workbook` (`BACKLOG.md`, item 8).
 
@@ -33,7 +33,7 @@ Anything the interpreter cannot run (UserForms, Windows API `Declare`, COM objec
 
 ## Fixtures
 
-`fixtures/src/` holds six business-shaped modules (acts by category, labour statement, numeric edge cases, strings, an unsupported-feature graveyard, a 40-row demo workbook). Each has expected results in `fixtures/expected/`, written by hand before the interpreter could run them, and cross-checked with an independent Python calculation where arithmetic is involved. All names and numbers are made up.
+`fixtures/src/` holds business-shaped modules: acts by category, a labour statement, numeric edge cases, strings, an unsupported-feature graveyard, Dictionary grouping, and the 40-row demo workbook in two languages (`demo_invoice` in English, `demo_acts` in Russian with code page 1251; same numbers). Each has expected results in `fixtures/expected/`, written by hand before the interpreter could run them, and cross-checked with an independent Python calculation where arithmetic is involved. All names and numbers are made up.
 
 ```bash
 npm install

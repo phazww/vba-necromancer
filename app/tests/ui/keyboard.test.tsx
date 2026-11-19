@@ -87,6 +87,7 @@ describe("tab order", () => {
       "Source on GitHub",
       "Choose a file",
       "Try the demo",
+      "Try a Russian workbook",
       "Try the graveyard sample",
       "What this does not do yet",
     ]);

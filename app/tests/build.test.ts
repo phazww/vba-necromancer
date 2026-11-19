@@ -113,7 +113,7 @@ describe("served under a sub-path", () => {
 
 describe("deploy workflow", () => {
   it("parses as YAML and uploads app/dist as the Pages artifact", () => {
-    const text = readFileSync(join(ROOT, ".github/workflows/pages.yml"), "utf8");
+    const text = readFileSync(join(ROOT, "docs/ci/pages.yml"), "utf8");
     const doc = parseYaml(text) as { jobs: Record<string, { steps?: Array<{ uses?: string; with?: { path?: string }; run?: string }> }> };
     const steps = Object.values(doc.jobs).flatMap((j) => j.steps ?? []);
     const upload = steps.find((s) => s.uses?.startsWith("actions/upload-pages-artifact"));

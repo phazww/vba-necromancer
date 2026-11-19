@@ -81,7 +81,7 @@ describe("while loading", () => {
   it("disables the zone and the demo buttons and announces Exhuming", () => {
     render(<App initial={{ ...initialState(), phase: "loading" }} />);
     expect((screen.getByRole("button", { name: "Choose a file" }) as HTMLButtonElement).disabled).toBe(true);
-    expect((screen.getByRole("button", { name: "Try the demo" }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole("button", { name: "Try a Russian workbook" }) as HTMLButtonElement).disabled).toBe(true);
     expect((screen.getByRole("button", { name: "Try the graveyard sample" }) as HTMLButtonElement).disabled).toBe(true);
     expect(screen.getByRole("status").textContent).toBe("Exhuming");
   });
@@ -104,7 +104,7 @@ describe("errors", () => {
 
   it("keeps the previously loaded workbook visible", async () => {
     render(<App />);
-    fireEvent.click(screen.getByRole("button", { name: "Try the demo" }));
+    fireEvent.click(screen.getByRole("button", { name: "Try a Russian workbook" }));
     expect(await screen.findByText("demo_acts.xlsm")).toBeTruthy();
     fireEvent.drop(document.body, { dataTransfer: { files: [textFile()] } });
     await waitFor(() => expect(screen.getByText(/notes\.txt is not an Excel workbook/)).toBeTruthy());

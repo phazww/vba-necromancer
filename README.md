@@ -58,7 +58,7 @@ npm run preview -w app   # serve app/dist locally
 
 The build is a static site with relative URLs (`base: "./"`), so it works from any sub-path. It makes no network request after the page has loaded, and the page carries a Content-Security-Policy that forbids connections. The build prints the raw and gzip size of every file and fails when the total gzip size is over 600 KB.
 
-To publish on GitHub Pages: in the repository, open Settings, then Pages, and set Source to "GitHub Actions". After that every push to `main` runs `.github/workflows/pages.yml` (typecheck, lint, tests, build, deploy). The site is then at `https://<user>.github.io/<repository>/`.
+The live demo is the built `app/dist`, published to the `gh-pages` branch. To deploy with GitHub Actions instead (typecheck, lint, tests, build, deploy on every push to `main`), copy `docs/ci/pages.yml` to `.github/workflows/` and set Settings, Pages, Source to "GitHub Actions".
 
 ## Layout
 

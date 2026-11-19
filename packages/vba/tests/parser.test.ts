@@ -249,7 +249,7 @@ describe("parse", () => {
         continue; // skip if no Module1.bas
       }
       expect(
-        () => parse(tokenize(source, fixture), fixture),
+        () => parse(tokenize(source), fixture),
         `fixture ${fixture}/Module1.bas should parse without error`,
       ).not.toThrow();
     }
@@ -304,5 +304,43 @@ describe("parser: single-line If, literal types, labels", () => {
     if (stmt.kind === "CallStatement") {
       expect(stmt.args.map((a) => a.kind)).toEqual(["Literal", "NothingExpr", "Literal"]);
     }
+  });
+});
+
+describe("parser: dotted type names and As New (DTASK-01)", () => {
+  function declarators(src: string) {
+    const sub = parseSource(`Sub S()\n${src}\nEnd Sub`).procedures[0] as SubDecl;
+    const dim = sub.body[0] as import("../src/ast.js").DimStatement;
+    return dim.declarators;
+  }
+
+  it("Dim d As New Scripting.Dictionary", () => {
+    const [d] = declarators("Dim d As New Scripting.Dictionary");
+    expect(d.typeName).toBe("Scripting.Dictionary");
+    expect(d.isNew).toBe(true);
+  });
+
+  it("Dim d As Scripting.Dictionary is not New", () => {
+    const [d] = declarators("Dim d As Scripting.Dictionary");
+    expect(d.typeName).toBe("Scripting.Dictionary");
+    expect(d.isNew).toBe(false);
+  });
+
+  it("Set d = New Scripting.Dictionary gives a NewExpr with the dotted class name", () => {
+    const sub = parseSource("Sub S()\nSet d = New Scripting.Dictionary\nEnd Sub").procedures[0] as SubDecl;
+    const set = sub.body[0] as import("../src/ast.js").SetStatement;
+    expect(set.value.kind).toBe("NewExpr");
+    expect((set.value as import("../src/ast.js").NewExpr).className).toBe("Scripting.Dictionary");
+  });
+
+  it("other declarations parse as before", () => {
+    const [r] = declarators("Dim r As Excel.Range");
+    expect(r).toMatchObject({ name: "r", typeName: "Excel.Range", isNew: false });
+    const [x] = declarators("Dim x As Long");
+    expect(x).toMatchObject({ typeName: "Long", isNew: false, dimensions: null });
+    const [a] = declarators("Dim a(1 To 3) As String");
+    expect(a.typeName).toBe("String");
+    expect(a.dimensions).toHaveLength(1);
+    expect(a.isNew).toBe(false);
   });
 });

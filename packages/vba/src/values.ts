@@ -37,6 +37,12 @@ export interface VbObject {
   set(member: string, args: Value[], value: Value): void;
   /** Value used when the object appears where a plain value is required. */
   defaultValue?(): Value;
+  /** Member used for `obj(args)` and `obj(args) = v`. */
+  readonly defaultMember?: string;
+  /** Lower-case members that accept `obj.Member(args) = v`. */
+  readonly indexedSetters?: ReadonlySet<string>;
+  /** Elements visited by `For Each`; a snapshot. */
+  enumerate?(): Value[];
 }
 
 export type Value = null | number | string | boolean | IntValue | VbArray | VbObject | NothingValue;
@@ -150,6 +156,7 @@ const SUPPORTED_TYPES = new Map<string, string>([
   ["worksheet", "Worksheet"],
   ["range", "Range"],
   ["workbook", "Workbook"],
+  ["scripting.dictionary", "Dictionary"],
 ]);
 
 /** Canonical type name, or null when the type is not supported by this interpreter. */
@@ -160,7 +167,9 @@ export function canonicalType(name: string | null): string | null {
 }
 
 export function isObjectType(type: string): boolean {
-  return type === "Object" || type === "Worksheet" || type === "Range" || type === "Workbook";
+  return (
+    type === "Object" || type === "Worksheet" || type === "Range" || type === "Workbook" || type === "Dictionary"
+  );
 }
 
 export function defaultValueFor(type: string): Value {
@@ -180,6 +189,7 @@ export function defaultValueFor(type: string): Value {
     case "Worksheet":
     case "Range":
     case "Workbook":
+    case "Dictionary":
       return NOTHING;
     default:
       return null;
@@ -191,6 +201,10 @@ export function coerceToType(type: string, v: Value): Value {
   if (type === "Variant") {
     if (v instanceof VbArray) return v.copy();
     return v;
+  }
+  if (type === "Dictionary") {
+    if (isNothing(v) || (isObject(v) && v.typeName === "Dictionary")) return v;
+    throw new RuntimeError(13, "Type mismatch");
   }
   if (isObjectType(type)) {
     if (isObject(v) || isNothing(v)) return v;

@@ -21,6 +21,8 @@ import {
   type VbObject,
 } from "./values.js";
 
+export { DictionaryObject } from "./dictionary.js";
+
 function unsupported(type: string, member: string): never {
   throw new UnsupportedError("", 0, `${type}.${member}`);
 }

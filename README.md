@@ -22,6 +22,7 @@ Millions of business workbooks still depend on VBA: monthly acts, labour stateme
 | VBA parser | done | parses every fixture module; unsupported statements become AST nodes with line numbers |
 | VBA numeric semantics | done | `CInt`/`CLng`/`Round` banker's rounding on the stored double (`Round(2.675, 2) = 2.67` as in VBA), `\` and `Mod` operand rounding, Integer overflow = error 6, VBA Date epoch 1899-12-30 |
 | Interpreter, `Range`/`Cells`, execution trace | in progress | hand-written expected results in `fixtures/expected/` |
+| `Scripting.Dictionary` (`CreateObject` and `New`) | done | unit and property tests; `dictionary_grouping` fixture matches its hand-written oracle and the array version cell by cell. Details: `docs/scripting-dictionary.md` |
 | Browser UI | in progress | |
 
 ## Honest by design

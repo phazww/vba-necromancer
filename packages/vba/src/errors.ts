@@ -16,13 +16,18 @@ export class UnsupportedError extends Error {
   module: string;
   line: number;
   construct: string;
+  /** Extra text shown after the construct, e.g. the ProgID of CreateObject. */
+  detail?: string;
 
-  constructor(module: string, line: number, construct: string) {
-    super(`[${module}:${line}] Unsupported construct: ${construct}`);
+  constructor(module: string, line: number, construct: string, detail?: string) {
+    super(
+      `[${module}:${line}] Unsupported construct: ${construct}${detail === undefined ? "" : ` ("${detail}")`}`,
+    );
     this.name = "UnsupportedError";
     this.module = module;
     this.line = line;
     this.construct = construct;
+    this.detail = detail;
   }
 }
 

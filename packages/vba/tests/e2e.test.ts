@@ -37,22 +37,12 @@ interface Expected {
   numericTolerance: number;
 }
 
-/** Fixtures that cannot pass yet, with the reason. They show up as todo in the report. */
-const TODO: Record<string, string> = {
-  dictionary_grouping: "needs Scripting.Dictionary (.kiro/specs/scripting-dictionary)",
-};
-
 const names = readdirSync(join(ROOT, "fixtures/expected"))
   .filter((f) => f.endsWith(".json"))
   .map((f) => f.replace(/\.json$/, ""))
   .sort();
 
 describe.each(names)("end to end: %s", (name) => {
-  if (TODO[name]) {
-    it.todo(`${name}: ${TODO[name]}`);
-    return;
-  }
-
   const expected = JSON.parse(readFileSync(join(ROOT, "fixtures/expected", `${name}.json`), "utf8")) as Expected;
   const bytes = new Uint8Array(readFileSync(join(ROOT, "fixtures/build", `${name}.xlsm`)));
   const modules = extractModules(bytes).map((m) => parse(tokenize(m.source), m.name));

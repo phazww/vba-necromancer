@@ -18,6 +18,7 @@ import type {
 import { RuntimeError, UnsupportedError } from "./errors.js";
 import type { WorkbookHandle } from "./host.js";
 import { ErrObject, WorkbookObject } from "./objects.js";
+import { DictionaryObject, isDictionaryProgId } from "./dictionary.js";
 import { constructForName, scanUnsupported, type UnsupportedHit } from "./constructs.js";
 import type { TraceEvent } from "./trace.js";
 import { TracingWorkbook } from "./tracing-workbook.js";
@@ -44,6 +45,11 @@ import {
   type Value,
   type VbObject,
 } from "./values.js";
+
+/** Construct name for a slot whose declared type is not supported: `Dim As Foo`, or `New Foo` for `As New Foo`. */
+function slotConstruct(slot: VarSlot): string {
+  return slot.unsupported?.startsWith("As New ") ? slot.unsupported.slice(3) : `Dim ${slot.unsupported ?? ""}`;
+}
 
 export interface RunOptions {
   /** Guard against infinite loops: total loop iterations allowed in one run (default 1_000_000). */
@@ -197,7 +203,15 @@ export class Interpreter {
     const type = canonicalType(d.typeName);
     const base = { isConst: false, fixed: false, isArray: d.dimensions !== null };
     if (type === null) {
-      return { ...base, declaredType: "Variant", value: null, unsupported: `As ${d.typeName ?? ""}`.trim() };
+      const unsupported = d.isNew ? `As New ${d.typeName ?? ""}` : `As ${d.typeName ?? ""}`;
+      return { ...base, declaredType: "Variant", value: null, unsupported: unsupported.trim() };
+    }
+    if (d.isNew && d.dimensions === null) {
+      if (type !== "Dictionary") {
+        return { ...base, declaredType: "Variant", value: null, unsupported: `As New ${d.typeName ?? ""}`.trim() };
+      }
+      // Real VBA creates an `As New` object on first use; this creates it at declaration (see docs).
+      return { ...base, declaredType: type, value: new DictionaryObject() };
     }
     if (d.dimensions === null) return { ...base, declaredType: type, value: defaultValueFor(type) };
     if (d.dimensions.length === 0) return { ...base, declaredType: type, value: VbArray.unallocated(type) };
@@ -409,7 +423,7 @@ export class Interpreter {
   /** Apply the frame's On Error mode. Returns a signal to continue with, or rethrows. */
   private handleError(e: unknown, stmt: Located, frame: CallFrame): Signal {
     if (e instanceof UnsupportedError) {
-      const located = e.module === "" ? new UnsupportedError(stmt.module, stmt.line, e.construct) : e;
+      const located = e.module === "" ? new UnsupportedError(stmt.module, stmt.line, e.construct, e.detail) : e;
       if (frame.onErrorMode === "resume_next") {
         this.hits.push({ module: located.module, line: located.line, construct: located.construct });
         // Always recorded, even when cell tracing is off: it is how the graveyard is filled.
@@ -528,7 +542,7 @@ export class Interpreter {
   }
 
   private checkSupported(slot: VarSlot | undefined, at: Located): void {
-    if (slot?.unsupported) throw new UnsupportedError(at.module, at.line, `Dim ${slot.unsupported}`);
+    if (slot?.unsupported) throw new UnsupportedError(at.module, at.line, slotConstruct(slot));
   }
 
   private execSet(target: Expression, value: Value, frame: CallFrame, at: Located): void {
@@ -601,11 +615,12 @@ export class Interpreter {
 
   private execForEach(stmt: Extract<Statement, { kind: "ForEachStatement" }>, frame: CallFrame): Signal {
     const collection = this.evaluate(stmt.collection, frame);
-    if (!(collection instanceof VbArray)) {
-      throw new UnsupportedError(stmt.module, stmt.line, "For Each over a non-array");
-    }
+    let elements: Value[];
+    if (collection instanceof VbArray) elements = [...collection.data];
+    else if (isObject(collection) && collection.enumerate) elements = collection.enumerate();
+    else throw new UnsupportedError(stmt.module, stmt.line, "For Each over a non-array");
     const slot = this.slotForWrite(stmt.variable, frame);
-    for (const element of [...collection.data]) {
+    for (const element of elements) {
       this.tick(stmt);
       this.assignSlot(slot, element);
       const sig = this.execBlock(stmt.body, frame);
@@ -670,7 +685,7 @@ export class Interpreter {
   }
 
   private assignSlot(slot: VarSlot, value: Value): void {
-    if (slot.unsupported) throw new UnsupportedError("", 0, `Dim ${slot.unsupported}`);
+    if (slot.unsupported) throw new UnsupportedError("", 0, slotConstruct(slot));
     if (slot.isConst) throw new FatalError("Assignment to constant not permitted");
     if (slot.isArray) {
       if (!(value instanceof VbArray)) throw new RuntimeError(13, "Type mismatch");
@@ -714,9 +729,22 @@ export class Interpreter {
       case "CallExpr":
       case "IndexExpr": {
         const callee = target.kind === "CallExpr" ? target.callee : target.object;
+        if (callee.kind === "MemberExpr" || callee.kind === "WithMemberExpr") {
+          // `d.Item(k) = v`, `d.Key(old) = new`. Other shapes (ws.Cells(1, 1) = x) take the default-property path below.
+          const obj = callee.kind === "MemberExpr" ? this.requireObject(this.evaluate(callee.object, frame)) : this.withTarget(frame);
+          if (obj.indexedSetters?.has(callee.member.toLowerCase())) {
+            obj.set(callee.member, target.args.map((a) => this.evaluate(a, frame)), value);
+            return;
+          }
+        }
         if (callee.kind === "Identifier") {
           const slot = lookupSlot(frame, this.modules, callee.name);
-          if (slot?.unsupported) throw new UnsupportedError("", 0, `Dim ${slot.unsupported}`);
+          if (slot?.unsupported) throw new UnsupportedError("", 0, slotConstruct(slot));
+          if (slot && isNothing(slot.value) && !slot.isArray) throw new RuntimeError(91, "Object variable or With block variable not set");
+          if (slot && isObject(slot.value) && slot.value.defaultMember) {
+            slot.value.set(slot.value.defaultMember, target.args.map((a) => this.evaluate(a, frame)), value);
+            return;
+          }
           if (slot && slot.value instanceof VbArray) {
             const indices = target.args.map((a) => toLongArg(this.evaluate(a, frame)));
             if (isObject(value) && !isObjectType(slot.value.elemType)) value = this.defaultOf(value);
@@ -784,6 +812,7 @@ export class Interpreter {
       case "NothingExpr":
         return NOTHING;
       case "NewExpr":
+        if (isDictionaryProgId(expr.className)) return new DictionaryObject();
         throw new UnsupportedError(expr.module, expr.line, `New ${expr.className}`);
     }
   }
@@ -889,7 +918,7 @@ export class Interpreter {
     const key = name.toLowerCase();
     const slot = lookupSlot(frame, this.modules, name);
     if (slot) {
-      if (slot.unsupported) throw new UnsupportedError("", 0, `Dim ${slot.unsupported}`);
+      if (slot.unsupported) throw new UnsupportedError("", 0, slotConstruct(slot));
       return slot.value;
     }
     const constant = CONSTANTS.get(key);
@@ -935,6 +964,12 @@ export class Interpreter {
     }
   }
 
+  /** CreateObject: only Scripting.Dictionary exists here; the caller's statement supplies module and line. */
+  private createObject(progId: string): Value {
+    if (isDictionaryProgId(progId)) return new DictionaryObject();
+    throw new UnsupportedError("", 0, "CreateObject", progId);
+  }
+
   private callByName(name: string, args: Expression[], frame: CallFrame, parens: boolean): Value {
     const key = name.toLowerCase();
 
@@ -950,9 +985,13 @@ export class Interpreter {
       slot = undefined;
     }
     if (slot) {
-      if (slot.unsupported) throw new UnsupportedError("", 0, `Dim ${slot.unsupported}`);
+      if (slot.unsupported) throw new UnsupportedError("", 0, slotConstruct(slot));
       if (slot.value instanceof VbArray) {
         return slot.value.get(args.map((a) => toLongArg(this.evaluate(a, frame))));
+      }
+      if (isNothing(slot.value)) throw new RuntimeError(91, "Object variable or With block variable not set");
+      if (isObject(slot.value) && slot.value.defaultMember) {
+        return slot.value.get(slot.value.defaultMember, args.map((a) => this.evaluate(a, frame)));
       }
       throw new FatalError(`Expected array: ${name}`);
     }
@@ -978,6 +1017,10 @@ export class Interpreter {
 
     const declared = this.unsupportedDecls.get(key);
     if (declared) throw new UnsupportedError(declared.module, declared.line, declared.construct);
+    if (key === "createobject") {
+      if (args.length !== 1) throw new RuntimeError(450, "Wrong number of arguments or invalid property assignment");
+      return this.createObject(toStr(this.evaluate(args[0], frame)));
+    }
     if (KNOWN_UNIMPLEMENTED.has(key)) throw new UnsupportedError("", 0, constructForName(name));
 
     // Reading an undeclared name is Empty unless Option Explicit is on (a compile error in VBA).

@@ -355,17 +355,20 @@ class Parser {
     return { name, typeName, passing, optional, defaultValue, isArray };
   }
 
-  private parseTypeName(): string {
-    const tok = this.current();
-    // Allow any token as a type name (Worksheet, String, Long, etc.)
-    this.advance();
-    // Allow "New TypeName" in type position: skip New
-    if (tok.type === TokenType.New) {
-      const className = this.current();
+  /** Reads `Ident ( . Ident )*` and returns the joined name, e.g. "Scripting.Dictionary". */
+  private parseDottedName(): string {
+    let name = this.advance().value;
+    while (this.check(TokenType.Dot) && /^[A-Za-z_]/.test(this.peek(1).value)) {
       this.advance();
-      return className.value;
+      name += "." + this.advance().value;
     }
-    return tok.value;
+    return name;
+  }
+
+  private parseTypeName(): string {
+    // Allow "New TypeName" in type position (parameters): skip New
+    if (this.check(TokenType.New)) this.advance();
+    return this.parseDottedName();
   }
 
   // ── Body (statement list) ─────────────────────────────────────────────────
@@ -692,11 +695,16 @@ class Parser {
       this.consume(TokenType.RParen, "Expected ')' after array dimensions");
     }
     let typeName: string | null = null;
+    let isNew = false;
     if (this.check(TokenType.As)) {
       this.advance();
+      if (this.check(TokenType.New)) {
+        this.advance();
+        isNew = true;
+      }
       typeName = this.parseTypeName();
     }
-    return { name, typeName, dimensions };
+    return { name, typeName, dimensions, isNew };
   }
 
   private parseDimDimension(): [Expression | null, Expression] {
@@ -1595,8 +1603,7 @@ class Parser {
     // New ClassName
     if (tok.type === TokenType.New) {
       this.advance();
-      const className = this.current().value;
-      this.advance();
+      const className = this.parseDottedName();
       const newExpr: NewExpr = { ...loc, kind: "NewExpr", className };
       return newExpr;
     }

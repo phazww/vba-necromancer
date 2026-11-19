@@ -4,6 +4,7 @@
  */
 
 import type { ModuleAST } from "./ast.js";
+import { isDictionaryProgId } from "./dictionary.js";
 
 export interface UnsupportedHit {
   module: string;
@@ -78,8 +79,34 @@ export function scanUnsupported(modules: ModuleAST[]): UnsupportedHit[] {
         case "UnsupportedStatement":
           add(String(v.module), Number(v.line), String(v.construct));
           break;
+        case "CallExpr":
+        case "IndexExpr": {
+          // CreateObject("Scripting.Dictionary") is supported: visit only the arguments, so the callee is not a hit.
+          const callee = (v.kind === "CallExpr" ? v.callee : v.object) as Node;
+          const args = v.args as unknown[];
+          const arg = args.length === 1 ? (args[0] as Node) : undefined;
+          if (
+            callee.kind === "Identifier" &&
+            String(callee.name).toLowerCase() === "createobject" &&
+            excluded(String(callee.name)) !== undefined &&
+            arg?.kind === "Literal" &&
+            typeof arg.value === "string" &&
+            isDictionaryProgId(arg.value)
+          ) {
+            visit(args);
+            return;
+          }
+          break;
+        }
         case "NewExpr":
-          add(String(v.module), Number(v.line), `New ${String(v.className)}`);
+          if (!isDictionaryProgId(String(v.className))) add(String(v.module), Number(v.line), `New ${String(v.className)}`);
+          break;
+        case "DimStatement":
+          for (const d of v.declarators as Array<{ typeName: string | null; isNew: boolean }>) {
+            if (d.isNew && d.typeName !== null && !isDictionaryProgId(d.typeName)) {
+              add(String(v.module), Number(v.line), `New ${d.typeName}`);
+            }
+          }
           break;
         case "Identifier": {
           // Reached for call callees as well as bare names such as `DoEvents`.

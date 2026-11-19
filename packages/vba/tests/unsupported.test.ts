@@ -41,7 +41,7 @@ describe("static scan", () => {
   });
 
   it("finds CreateObject inside an expression and on a line that never runs", () => {
-    const src = sub('If False Then\nSet f = CreateObject("Scripting.Dictionary")\nEnd If');
+    const src = sub('If False Then\nSet f = CreateObject("Scripting.FileSystemObject")\nEnd If');
     expect(scanUnsupported([mod(src)])).toEqual([{ module: "Module1", line: 4, construct: "CreateObject" }]);
   });
 
@@ -52,6 +52,45 @@ describe("static scan", () => {
 
   it("is empty for a module with no unsupported constructs", () => {
     expect(scanUnsupported([mod(sub("Cells(1, 1).Value = 1"))])).toEqual([]);
+  });
+});
+
+describe("static scan: Scripting.Dictionary (DTASK-06)", () => {
+  const hits = (src: string) => scanUnsupported([mod(src)]).map((h) => [h.line, h.construct]);
+
+  it("does not list CreateObject(\"Scripting.Dictionary\") in any case", () => {
+    expect(hits(sub('Set d = CreateObject("Scripting.Dictionary")\nSet e = CreateObject("scripting.dictionary")'))).toEqual([]);
+  });
+
+  it("does not list New Scripting.Dictionary in Set or in Dim ... As New", () => {
+    expect(hits(sub("Dim d As New Scripting.Dictionary\nSet e = New Scripting.Dictionary"))).toEqual([]);
+  });
+
+  it("lists other ProgIDs and non-literal arguments as CreateObject", () => {
+    const src = sub(
+      'Set a = CreateObject("Scripting.FileSystemObject")\nSet b = CreateObject("ADODB.Connection")\nSet c = CreateObject(progId)',
+    );
+    expect(hits(src)).toEqual([
+      [3, "CreateObject"],
+      [4, "CreateObject"],
+      [5, "CreateObject"],
+    ]);
+  });
+
+  it("lists Dim ... As New Foo at the Dim's line, and Set c = New Foo as before", () => {
+    expect(hits(sub("Dim c As New Foo\nSet e = New Foo"))).toEqual([
+      [3, "New Foo"],
+      [4, "New Foo"],
+    ]);
+  });
+
+  it("does not flag a module's own CreateObject function", () => {
+    const src = 'Function CreateObject(s As String) As Long\nCreateObject = 1\nEnd Function\n' + sub('x = CreateObject("X.Y")');
+    expect(scanUnsupported([mod(src)])).toEqual([]);
+  });
+
+  it("a Dictionary on a line that never runs gives no hit", () => {
+    expect(hits(sub('If False Then\nSet d = CreateObject("Scripting.Dictionary")\nEnd If'))).toEqual([]);
   });
 });
 

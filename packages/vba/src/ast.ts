@@ -1,6 +1,6 @@
 // ─── Token types ────────────────────────────────────────────────────────────
 
-export const enum TokenType {
+export enum TokenType {
   // Literals
   IntegerLiteral,
   LongLiteral,
@@ -167,6 +167,8 @@ export interface DimDeclarator {
   typeName: string | null;
   /** array dimensions, e.g. [(1,10)] for (1 To 10) or [(null,5)] for (5) */
   dimensions: Array<[Expression | null, Expression]> | null;
+  /** `Dim x As New T` */
+  isNew: boolean;
 }
 
 export interface DimStatement extends NodeLocation {

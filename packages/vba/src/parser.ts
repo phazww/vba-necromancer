@@ -29,6 +29,8 @@ import {
   ReDimStatement,
   OnErrorStatement,
   UnsupportedStatement,
+  LabelStatement,
+  GoToStatement,
   ReturnStatement,
   Expression,
   Literal,
@@ -432,6 +434,9 @@ class Parser {
       return ret;
     }
     if (tok.type === TokenType.On) return this.parseOnError();
+    if (tok.type === TokenType.GoTo) return this.parseGoTo();
+    if (tok.type === TokenType.Resume) return this.parseUnsupportedLine();
+    if (this.isLabelAhead()) return this.parseLabel();
 
     // Public/Private/Static — module-level only, shouldn't appear in body but guard
     if (
@@ -607,13 +612,26 @@ class Parser {
     ) {
       return args;
     }
-    // Try to parse first arg
-    args.push(this.parseExpression());
-    while (this.check(TokenType.Comma)) {
+    // Omitted arguments (Foo a, , c) become NothingExpr placeholders, as in parseArgList.
+    for (;;) {
+      args.push(this.check(TokenType.Comma) ? this.makeNothingExpr() : this.parseExpression());
+      if (!this.check(TokenType.Comma)) break;
       this.advance();
-      args.push(this.parseExpression());
+      if (this.atStatementEnd()) {
+        args.push(this.makeNothingExpr());
+        break;
+      }
     }
     return args;
+  }
+
+  private atStatementEnd(): boolean {
+    return (
+      this.check(TokenType.Newline) ||
+      this.check(TokenType.EOF) ||
+      this.check(TokenType.Colon) ||
+      this.check(TokenType.Comment)
+    );
   }
 
   private endStatement(): void {
@@ -745,6 +763,21 @@ class Parser {
 
   // ── If / ElseIf / Else / End If ──────────────────────────────────────────
 
+  /**
+   * True when a single-line If body has ended: at a line break, a comment, EOF,
+   * or right after a statement that already consumed its own line break.
+   */
+  private atSingleLineIfEnd(): boolean {
+    if (
+      this.check(TokenType.Newline) ||
+      this.check(TokenType.EOF) ||
+      this.check(TokenType.Comment)
+    ) {
+      return true;
+    }
+    return this.pos > 0 && this.tokens[this.pos - 1].type === TokenType.Newline;
+  }
+
   private parseIf(): IfStatement {
     const loc = this.loc();
     this.advance(); // If
@@ -756,9 +789,7 @@ class Parser {
       // Everything up to end-of-line or Else is the then-body
       const thenStmts: Statement[] = [];
       while (
-        !this.check(TokenType.Newline) &&
-        !this.check(TokenType.EOF) &&
-        !this.check(TokenType.Comment) &&
+        !this.atSingleLineIfEnd() &&
         !(this.check(TokenType.Else))
       ) {
         const stmt = this.parseStatement();
@@ -769,11 +800,7 @@ class Parser {
       if (this.check(TokenType.Else)) {
         this.advance();
         elseBody = [];
-        while (
-          !this.check(TokenType.Newline) &&
-          !this.check(TokenType.EOF) &&
-          !this.check(TokenType.Comment)
-        ) {
+        while (!this.atSingleLineIfEnd()) {
           const stmt = this.parseStatement();
           if (stmt) elseBody.push(stmt);
           if (this.check(TokenType.Colon)) this.advance();
@@ -815,7 +842,7 @@ class Parser {
         this.advance();
         this.endStatement();
         elseBody = this.parseIfBody();
-        break;
+        continue; // the closing "End If" is consumed below
       }
 
       if (cur.type === TokenType.End) {
@@ -1184,6 +1211,32 @@ class Parser {
     return { ...loc, kind: "ExitStatement", what: kind };
   }
 
+  // ── Labels and GoTo ──────────────────────────────────────────────────────
+
+  /** A label is an identifier followed by ':' as the first token on its line. */
+  private isLabelAhead(): boolean {
+    const tok = this.current();
+    if (tok.type !== TokenType.Identifier) return false;
+    if (this.peek(1).type !== TokenType.Colon) return false;
+    return this.pos === 0 || this.tokens[this.pos - 1].type === TokenType.Newline;
+  }
+
+  private parseLabel(): LabelStatement {
+    const loc = this.loc();
+    const name = this.advance().value;
+    this.advance(); // :
+    return { ...loc, kind: "LabelStatement", name };
+  }
+
+  private parseGoTo(): GoToStatement {
+    const loc = this.loc();
+    this.advance(); // GoTo
+    const label = this.current().value;
+    this.advance();
+    this.endStatement();
+    return { ...loc, kind: "GoToStatement", label };
+  }
+
   // ── On Error ─────────────────────────────────────────────────────────────
 
   private parseOnError(): OnErrorStatement {
@@ -1477,7 +1530,13 @@ class Parser {
     // Literals
     if (tok.type === TokenType.IntegerLiteral || tok.type === TokenType.LongLiteral) {
       this.advance();
-      const lit: Literal = { ...loc, kind: "Literal", value: parseFloat(tok.value), typeName: "Long" };
+      const value = parseFloat(tok.value);
+      // Unsuffixed literals take the smallest fitting type, as in VBA; "&" forces Long.
+      const isInteger =
+        tok.type === TokenType.IntegerLiteral
+          ? value >= -32768 && value <= 32767
+          : tok.value.endsWith("%");
+      const lit: Literal = { ...loc, kind: "Literal", value, typeName: isInteger ? "Integer" : "Long" };
       return lit;
     }
     if (tok.type === TokenType.DoubleLiteral) {

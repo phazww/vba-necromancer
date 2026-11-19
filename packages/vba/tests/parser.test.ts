@@ -255,3 +255,54 @@ describe("parse", () => {
     }
   });
 });
+
+describe("parser: single-line If, literal types, labels", () => {
+  it("single-line If with Else does not swallow the following lines", () => {
+    const ast = parseSource("Sub S()\nIf x = 1 Then y = 2 Else y = 3\ny = 4\nz = 5\nEnd Sub");
+    const body = ast.procedures[0].body;
+    expect(body.map((s) => s.kind)).toEqual(["IfStatement", "AssignStatement", "AssignStatement"]);
+  });
+
+  it("single-line If without Else does not swallow the following lines", () => {
+    const ast = parseSource("Sub S()\nIf x = 1 Then y = 2\ny = 4\nEnd Sub");
+    expect(ast.procedures[0].body.map((s) => s.kind)).toEqual(["IfStatement", "AssignStatement"]);
+  });
+
+  it("types small unsuffixed literals as Integer and large ones as Long", () => {
+    const ast = parseSource("Sub S()\nx = 1\ny = 40000\nz = 1.5\nEnd Sub");
+    const types = ast.procedures[0].body.map((s) =>
+      s.kind === "AssignStatement" && s.value.kind === "Literal" ? s.value.typeName : null,
+    );
+    expect(types).toEqual(["Integer", "Long", "Double"]);
+  });
+
+  it("parses labels and GoTo", () => {
+    const ast = parseSource("Sub S()\nGoTo Done\nx = 1\nDone:\nEnd Sub");
+    expect(ast.procedures[0].body.map((s) => s.kind)).toEqual([
+      "GoToStatement",
+      "AssignStatement",
+      "LabelStatement",
+    ]);
+  });
+
+  it("reports Resume as an unsupported statement", () => {
+    const ast = parseSource("Sub S()\nResume Next\nEnd Sub");
+    const stmt = ast.procedures[0].body[0];
+    expect(stmt.kind).toBe("UnsupportedStatement");
+  });
+
+  it("closes a multi-line If / ElseIf / Else at End If", () => {
+    const ast = parseSource("Sub S()\nIf a Then\nx = 1\nElseIf b Then\nx = 2\nElse\nx = 3\nEnd If\ny = 4\nEnd Sub");
+    const body = ast.procedures[0].body;
+    expect(body.map((s) => s.kind)).toEqual(["IfStatement", "AssignStatement"]);
+  });
+
+  it("keeps omitted arguments of a call without parentheses", () => {
+    const ast = parseSource('Sub S()\nErr.Raise 1001, , "custom"\nEnd Sub');
+    const stmt = ast.procedures[0].body[0];
+    expect(stmt.kind).toBe("CallStatement");
+    if (stmt.kind === "CallStatement") {
+      expect(stmt.args.map((a) => a.kind)).toEqual(["Literal", "NothingExpr", "Literal"]);
+    }
+  });
+});

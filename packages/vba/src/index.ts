@@ -3,6 +3,12 @@
 export { tokenize } from "./lexer.js";
 export { parse } from "./parser.js";
 export { ParseError, UnsupportedError, RuntimeError } from "./errors.js";
+export { Interpreter, FatalError } from "./interpreter.js";
+export type { RunOptions, RunResult, UnsupportedHit } from "./interpreter.js";
+export { MemoryWorkbook } from "./memory-workbook.js";
+export type { MemorySheetInit } from "./memory-workbook.js";
+export type { WorkbookHandle, SheetHandle, RangeHandle, VBAValue, XlDirection } from "./host.js";
+export { runMacro } from "./run.js";
 export {
   roundHalfEven,
   roundHalfEvenTo,
@@ -45,6 +51,8 @@ export type {
   ReDimStatement,
   OnErrorStatement,
   UnsupportedStatement,
+  LabelStatement,
+  GoToStatement,
   ReturnStatement,
   Expression,
   Literal,

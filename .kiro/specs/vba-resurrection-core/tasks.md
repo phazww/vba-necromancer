@@ -191,8 +191,9 @@ Tasks are ordered so each builds on the previous. Each task references the requi
 
 ---
 
-## TASK-08 — Interpreter — core execution engine (`packages/vba`)
+## TASK-08 — Interpreter — core execution engine (`packages/vba`) ✅
 
+**Status:** Done (core scope; deferred items below)  
 **Requires:** REQ-06, REQ-09  
 **Depends on:** TASK-06, TASK-07
 
@@ -222,6 +223,15 @@ Tasks are ordered so each builds on the previous. Each task references the requi
 - `UnsupportedStatement` node throws `UnsupportedError` with correct `module` and `line`.
 - Under `On Error Resume Next`, `UnsupportedError` does not propagate; execution continues to next statement.
 - **String built-ins (fast-check):** for any ASCII string `s`, `Len(s) === s.length`; `Len(Left(s, Len(s))) === Len(s)`.
+
+### Deferred from TASK-08
+Not implemented in this pass. Each reports `UnsupportedError`, never a silent skip.
+- `builtins/datetime.ts` and `builtins/interaction.ts` (`Now`, `DateSerial`, `DateAdd`, `MsgBox`, `InputBox`, ...), plus `Format`, `Rnd`, `StrConv`, `IIf`, `CDate`/`CSng`/`CCur`.
+- `Resume`, `Resume Next`, `Resume <label>` inside an error handler.
+- Types `Single`, `Currency`, `Byte`, `LongLong`, `Static` locals, fixed-length strings; `For Each` over Range or Collection.
+- Under `On Error Resume Next`, an error in an `If`/`Select` condition skips the whole statement. VBA continues inside the block.
+- The interpreter uses the minimal host interface in `packages/vba/src/host.ts` and `MemoryWorkbook`; TASK-10 replaces them with `packages/workbook`.
+- `RunResult` has no `trace` yet (TASK-11); it lists skipped unsupported statements in `unsupported`.
 
 ---
 

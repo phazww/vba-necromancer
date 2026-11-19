@@ -5,3 +5,4 @@
 3. **Demo workbook** for the video: an acts workbook with a «Сформировать акты» button, ~40 journal rows, built from fixtures/src like the others.
 4. **Export to TypeScript** (stretch): emit an equivalent TS function per macro and prove equality on the fixtures.
 5. **Construct names must match REQ-12.2.** The parser reports `Print` for `Print #1, ...`; REQ-12.2 and fixtures/expected/graveyard.json use `Print #`. Align in TASK-12. `CreateObject` is a call expression, so it must be reported by the static scan of call sites (line 11 in graveyard), not by the statement parser.
+6. **Known deviations after TASK-08 (from Kiro's report, 19 Nov):** under `On Error Resume Next` an error in an `If`/`Select` condition skips the whole block (VBA continues inside it); decimal separator is always `.`; `&H` hex literals lex wrongly; `Resume`, date/time and interaction built-ins, `Single`/`Currency`/`Byte`, `For Each` over a Range are reported as unsupported.

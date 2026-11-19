@@ -235,6 +235,8 @@ export type Statement =
   | ExitStatement
   | ReDimStatement
   | OnErrorStatement
+  | LabelStatement
+  | GoToStatement
   | UnsupportedStatement
   | ReturnStatement;
 
@@ -343,6 +345,16 @@ export interface OnErrorStatement extends NodeLocation {
   kind: "OnErrorStatement";
   mode: "ResumeNext" | "GoTo0" | "GoToLabel";
   label: string | null;
+}
+
+export interface LabelStatement extends NodeLocation {
+  kind: "LabelStatement";
+  name: string;
+}
+
+export interface GoToStatement extends NodeLocation {
+  kind: "GoToStatement";
+  label: string;
 }
 
 export interface UnsupportedStatement extends NodeLocation {

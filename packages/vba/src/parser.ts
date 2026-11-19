@@ -463,6 +463,21 @@ class Parser {
       return this.parseUnsupportedLine();
     }
 
+    // Line Input #n, var (file I/O)
+    if (
+      tok.type === TokenType.Identifier &&
+      tok.value.toLowerCase() === "line" &&
+      this.peek(1).type === TokenType.Input
+    ) {
+      const loc = this.loc();
+      this.advance();
+      this.advance();
+      const construct = this.current().type === TokenType.Hash ? "Line Input #" : "Line Input";
+      const raw = "Line Input " + this.collectLineRaw();
+      this.endStatement();
+      return { ...loc, kind: "UnsupportedStatement", construct, raw };
+    }
+
     // Let (optional assignment keyword)
     if (tok.type === TokenType.Let) {
       this.advance();
@@ -1281,8 +1296,12 @@ class Parser {
 
   private parseUnsupportedLine(): UnsupportedStatement {
     const loc = this.loc();
-    const construct = this.current().value;
+    let construct = this.current().value;
     this.advance();
+    // `Print #1, x` is the file statement; REQ-12.2 names it "Print #".
+    if (this.current().type === TokenType.Hash && /^(print|input|write|get|put)$/i.test(construct)) {
+      construct += " #";
+    }
     const raw = construct + " " + this.collectLineRaw();
     this.endStatement();
     return { ...loc, kind: "UnsupportedStatement", construct, raw };

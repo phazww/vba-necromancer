@@ -18,6 +18,10 @@ import type {
 import { RuntimeError, UnsupportedError } from "./errors.js";
 import type { WorkbookHandle } from "./host.js";
 import { ErrObject, WorkbookObject } from "./objects.js";
+import { constructForName, scanUnsupported, type UnsupportedHit } from "./constructs.js";
+import type { TraceEvent } from "./trace.js";
+import { TracingWorkbook } from "./tracing-workbook.js";
+import { ApplicationObject, WorksheetFunctionObject } from "./builtins/worksheet.js";
 import { BUILTINS, KNOWN_UNIMPLEMENTED, type BuiltinContext } from "./builtins/index.js";
 import { CONSTANTS } from "./constants.js";
 import { applyComparison, compareValues } from "./compare.js";
@@ -44,19 +48,23 @@ import {
 export interface RunOptions {
   /** Guard against infinite loops: total loop iterations allowed in one run (default 1_000_000). */
   maxIterations?: number;
+  /** Record cell reads and writes (default true). Unsupported events are always recorded. */
+  trace?: boolean;
 }
 
-export interface UnsupportedHit {
-  module: string;
-  line: number;
-  construct: string;
-}
+export type { UnsupportedHit };
 
 export interface RunResult {
   status: "fully resurrected" | "partly resurrected" | "failed";
   error?: Error;
-  /** Unsupported statements that were skipped under On Error Resume Next. */
+  /** Cell reads and writes, and unsupported statements skipped under On Error Resume Next. */
+  trace: TraceEvent[];
+  /** Unsupported statements that were skipped under On Error Resume Next during this run. */
   unsupported: UnsupportedHit[];
+  /** Every unsupported construct in the loaded modules, found statically (whether or not it ran). */
+  staticUnsupported: UnsupportedHit[];
+  /** Set when the run stopped on an unsupported construct outside On Error Resume Next. */
+  stoppedAt?: UnsupportedHit;
 }
 
 /** A runtime error that On Error can never catch (code 0): loop guard, compile-time style errors. */
@@ -85,7 +93,11 @@ interface WriteBack {
 export class Interpreter {
   private readonly modules: ModuleRuntime[] = [];
   private readonly workbook: WorkbookObject;
+  private readonly tracing: TracingWorkbook;
+  private readonly staticUnsupported: UnsupportedHit[];
   private readonly err = new ErrObject();
+  private readonly application = new ApplicationObject();
+  private readonly worksheetFunction = new WorksheetFunctionObject();
   private readonly unsupportedDecls = new Map<string, UnsupportedHit>();
   private hits: UnsupportedHit[] = [];
   private iterations = 0;
@@ -93,7 +105,9 @@ export class Interpreter {
   private depth = 0;
 
   constructor(modules: ModuleAST[], workbook: WorkbookHandle) {
-    this.workbook = new WorkbookObject(workbook);
+    this.tracing = new TracingWorkbook(workbook, []);
+    this.workbook = new WorkbookObject(this.tracing);
+    this.staticUnsupported = scanUnsupported(modules);
     for (const ast of modules) {
       const procs = new Map<string, ProcedureDecl>();
       for (const p of ast.procedures) procs.set(p.name.toLowerCase(), p);
@@ -110,17 +124,24 @@ export class Interpreter {
     this.depth = 0;
     this.hits = [];
     this.err.clear();
+    const trace: TraceEvent[] = [];
+    this.tracing.events = trace;
+    this.tracing.enabled = options.trace ?? true;
+    this.tracing.current = { module: "", line: 0 };
+    const base = { trace, unsupported: this.hits, staticUnsupported: this.staticUnsupported };
     try {
       const target = this.findMacro(macroName);
       this.callProcedure(target.proc, target.module, [], null);
     } catch (e) {
       const error = e instanceof Error ? e : new Error(String(e));
-      return { status: "failed", error, unsupported: this.hits };
+      if (e instanceof UnsupportedError) {
+        // The macro ran up to this construct; what it wrote before is real, so it is partly resurrected.
+        const stoppedAt = { module: e.module, line: e.line, construct: e.construct };
+        return { ...base, status: "partly resurrected", error, stoppedAt };
+      }
+      return { ...base, status: "failed", error };
     }
-    return {
-      status: this.hits.length > 0 ? "partly resurrected" : "fully resurrected",
-      unsupported: this.hits,
-    };
+    return { ...base, status: this.hits.length > 0 ? "partly resurrected" : "fully resurrected" };
   }
 
   private findMacro(name: string): { proc: ProcedureDecl; module: ModuleRuntime } {
@@ -391,6 +412,14 @@ export class Interpreter {
       const located = e.module === "" ? new UnsupportedError(stmt.module, stmt.line, e.construct) : e;
       if (frame.onErrorMode === "resume_next") {
         this.hits.push({ module: located.module, line: located.line, construct: located.construct });
+        // Always recorded, even when cell tracing is off: it is how the graveyard is filled.
+        this.tracing.events.push({
+          kind: "unsupported",
+          module: located.module,
+          line: located.line,
+          construct: located.construct,
+          statement: { module: stmt.module, line: stmt.line },
+        });
         return null;
       }
       throw located;
@@ -421,7 +450,18 @@ export class Interpreter {
     }
   }
 
+  /** Stamps the statement on trace events while it runs, then restores the enclosing one. */
   private execStatement(stmt: Statement, frame: CallFrame): Signal {
+    const outer = this.tracing.current;
+    this.tracing.current = { module: stmt.module, line: stmt.line };
+    try {
+      return this.execStatementInner(stmt, frame);
+    } finally {
+      this.tracing.current = outer;
+    }
+  }
+
+  private execStatementInner(stmt: Statement, frame: CallFrame): Signal {
     switch (stmt.kind) {
       case "DimStatement":
         for (const d of stmt.declarators) this.checkSupported(frame.locals.get(d.name.toLowerCase()), stmt);
@@ -864,6 +904,10 @@ export class Interpreter {
         return this.workbook;
       case "activesheet":
         return this.workbook.activeSheet;
+      case "application":
+        return this.application;
+      case "worksheetfunction":
+        return this.worksheetFunction;
       default:
         break;
     }
@@ -934,7 +978,7 @@ export class Interpreter {
 
     const declared = this.unsupportedDecls.get(key);
     if (declared) throw new UnsupportedError(declared.module, declared.line, declared.construct);
-    if (KNOWN_UNIMPLEMENTED.has(key)) throw new UnsupportedError("", 0, name);
+    if (KNOWN_UNIMPLEMENTED.has(key)) throw new UnsupportedError("", 0, constructForName(name));
 
     // Reading an undeclared name is Empty unless Option Explicit is on (a compile error in VBA).
     if (args.length === 0 && !frame.module.ast.options.explicit) return null;

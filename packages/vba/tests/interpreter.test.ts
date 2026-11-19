@@ -327,10 +327,11 @@ describe("error handling", () => {
 describe("unsupported constructs", () => {
   it("an UnsupportedStatement throws UnsupportedError with module and line", () => {
     const { result } = exec(sub('Open "x.txt" For Output As #1'));
-    expect(result.status).toBe("failed");
+    expect(result.status).toBe("partly resurrected");
     const e = result.error as UnsupportedError;
     expect(e).toBeInstanceOf(UnsupportedError);
     expect([e.module, e.line, e.construct]).toEqual(["Module1", 3, "Open"]);
+    expect(result.stoppedAt).toEqual({ module: "Module1", line: 3, construct: "Open" });
   });
 
   it("under Resume Next the error is recorded and execution continues", () => {

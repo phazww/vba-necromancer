@@ -7,7 +7,7 @@
 
 import { RuntimeError, UnsupportedError } from "./errors.js";
 import type { RangeHandle, SheetHandle, VBAValue, WorkbookHandle, XlDirection } from "./host.js";
-import { MAX_COLS, MAX_ROWS, cellRef } from "./host.js";
+import { MAX_COLS, MAX_ROWS, cellRef, colLetters } from "./host.js";
 import {
   IntValue,
   NOTHING,
@@ -155,6 +155,46 @@ export class RangeObject implements VbObject {
         return mkLong(this.handle.topRow);
       case "column":
         return mkLong(this.handle.leftCol);
+      case "formula": {
+        if (args.length !== 0) throw new RuntimeError(450, "Wrong number of arguments or invalid property assignment");
+        const sheet = this.handle.sheet;
+        const cell = (r: number, c: number): VBAValue => sheet.getCellFormula(r, c) ?? sheet.getCellValue(r, c);
+        const { topRow, leftCol, bottomRow, rightCol } = this.handle;
+        if (topRow === bottomRow && leftCol === rightCol) return fromWorkbook(cell(topRow, leftCol));
+        const rows: VBAValue[][] = [];
+        for (let r = topRow; r <= bottomRow; r++) {
+          const row: VBAValue[] = [];
+          for (let c = leftCol; c <= rightCol; c++) row.push(cell(r, c));
+          rows.push(row);
+        }
+        return fromWorkbook(rows);
+      }
+      case "address":
+        if (args.length !== 0) return unsupported("Range", "Address with arguments");
+        return this.address();
+      case "rows":
+        if (args.length !== 0) return unsupported("Range", "Rows(index)");
+        return new CountObject(this.handle.bottomRow - this.handle.topRow + 1);
+      case "columns":
+        if (args.length !== 0) return unsupported("Range", "Columns(index)");
+        return new CountObject(this.handle.rightCol - this.handle.leftCol + 1);
+      case "count":
+        return mkLong(
+          (this.handle.bottomRow - this.handle.topRow + 1) * (this.handle.rightCol - this.handle.leftCol + 1),
+        );
+      case "offset": {
+        const dr = args.length > 0 && args[0] !== null ? toLongArg(args[0]) : 0;
+        const dc = args.length > 1 && args[1] !== null ? toLongArg(args[1]) : 0;
+        const h = this.handle;
+        return this.sub(h.topRow + dr, h.leftCol + dc, h.bottomRow + dr, h.rightCol + dc);
+      }
+      case "resize": {
+        const h = this.handle;
+        const rows = args.length > 0 && args[0] !== null ? toLongArg(args[0]) : h.bottomRow - h.topRow + 1;
+        const cols = args.length > 1 && args[1] !== null ? toLongArg(args[1]) : h.rightCol - h.leftCol + 1;
+        if (rows < 1 || cols < 1) throw new RuntimeError(1004, "Application-defined or object-defined error");
+        return this.sub(h.topRow, h.leftCol, h.topRow + rows - 1, h.leftCol + cols - 1);
+      }
       case "end": {
         const dir = args.length === 1 ? XL_DIRECTIONS.get(toLongArg(args[0])) : undefined;
         if (!dir) throw new RuntimeError(1004, "Application-defined or object-defined error");
@@ -178,6 +218,37 @@ export class RangeObject implements VbObject {
 
   defaultValue(): Value {
     return fromWorkbook(this.handle.getValue());
+  }
+
+  private address(): string {
+    const h = this.handle;
+    const first = `$${colLetters(h.leftCol)}$${h.topRow}`;
+    if (h.topRow === h.bottomRow && h.leftCol === h.rightCol) return first;
+    return `${first}:$${colLetters(h.rightCol)}$${h.bottomRow}`;
+  }
+
+  /** A range on the same sheet; outside the sheet is error 1004, as in Excel. */
+  private sub(top: number, left: number, bottom: number, right: number): RangeObject {
+    if (top < 1 || left < 1 || bottom > MAX_ROWS || right > MAX_COLS) {
+      throw new RuntimeError(1004, "Application-defined or object-defined error");
+    }
+    return new RangeObject(this.handle.sheet.getRange(`${cellRef(top, left)}:${cellRef(bottom, right)}`));
+  }
+}
+
+/** `Range.Rows` / `Range.Columns`: only `.Count` is supported. */
+class CountObject implements VbObject {
+  readonly typeName = "Range";
+
+  constructor(private readonly count: number) {}
+
+  get(member: string, args: Value[]): Value {
+    if (member.toLowerCase() === "count" && args.length === 0) return mkLong(this.count);
+    return unsupported("Range.Rows/Columns", member);
+  }
+
+  set(member: string): void {
+    unsupported("Range.Rows/Columns", member);
   }
 }
 
@@ -229,9 +300,22 @@ export class WorksheetObject implements VbObject {
         }
         return this.range(cellRef(row, col));
       }
-      case "range":
+      case "range": {
+        if (args.length === 2) {
+          // Range(Cells(r1, c1), Cells(r2, c2)): the rectangle spanned by the two cells.
+          const [a, b] = args;
+          if (!(a instanceof RangeObject) || !(b instanceof RangeObject) || a.handle.sheet.name !== this.sheet.name) {
+            throw new RuntimeError(1004, "Application-defined or object-defined error");
+          }
+          const top = Math.min(a.handle.topRow, b.handle.topRow);
+          const left = Math.min(a.handle.leftCol, b.handle.leftCol);
+          const bottom = Math.max(a.handle.bottomRow, b.handle.bottomRow);
+          const right = Math.max(a.handle.rightCol, b.handle.rightCol);
+          return this.range(`${cellRef(top, left)}:${cellRef(bottom, right)}`);
+        }
         if (args.length !== 1) return unsupported("Worksheet", "Range with " + args.length + " argument(s)");
         return this.range(toStr(args[0]));
+      }
       case "rows":
         if (args.length !== 0) return unsupported("Worksheet", "Rows(index)");
         return new DimensionObject("Rows");

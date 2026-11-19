@@ -254,8 +254,9 @@ Not implemented in this pass. Each reports `UnsupportedError`, never a silent sk
 
 ---
 
-## TASK-10 — Workbook interface and SheetJS adapter (`packages/workbook`)
+## TASK-10 — Workbook interface and SheetJS adapter (`packages/workbook`) ✅
 
+**Status:** Done (deferred items below)  
 **Requires:** REQ-10  
 **Depends on:** TASK-01
 
@@ -280,10 +281,17 @@ Not implemented in this pass. Each reports `UnsupportedError`, never a silent sk
 - `getRange(sheet, "A1")` → `getValue()` returns the scalar value of A1.
 - `getRange(sheet, "B3").end("xlUp")` returns the range handle for the last non-empty cell above B3.
 
+### Done differently / deferred from TASK-10
+- The interfaces stay in `packages/vba/src/host.ts` (the interpreter owns them); `packages/workbook/src/types.ts` re-exports them and adds `SaveableWorkbook` (`WorkbookHandle` plus `save()`). `SheetHandle` gained `getCellFormula`.
+- `xlsx` 0.20.3 is installed from the SheetJS CDN tarball in `packages/workbook`.
+- Tests use `fixtures/build/acts_by_category.xlsm`; there is no `simple` fixture.
+- Not done: `rows()`, `columns()`, `cells()` on `RangeHandle`; R1C1 and whole-row/column references (`A:A`, `1:1`); recalculation of formulas after a write (a cell keeps its cached value, and overwriting it drops the formula); Excel error cells are returned as their text (`#N/A`), not as VBA error values; `usedRowCount` comes from `!ref` and does not shrink when cells are cleared.
+
 ---
 
-## TASK-11 — Execution trace (`packages/vba`)
+## TASK-11 — Execution trace (`packages/vba`) ✅
 
+**Status:** Done (deferred items below)  
 **Requires:** REQ-11  
 **Depends on:** TASK-08, TASK-10
 
@@ -303,10 +311,18 @@ Not implemented in this pass. Each reports `UnsupportedError`, never a silent sk
 - A macro that accesses no cells returns `trace = []`.
 - Each `"write"` event's `before` matches the cell value before the write and `after` matches the value after.
 
+### Done differently / deferred from TASK-11
+- `RunResult` gained `trace`, `staticUnsupported` (see TASK-12) and `stoppedAt`. `RunOptions.trace: false` drops read/write events; `"unsupported"` events are always kept.
+- A range read or write records one event per cell. `Range.End` scans are not traced.
+- The statement stamped on an event is the innermost executing statement; after a nested call returns, the enclosing statement is restored.
+- The `simple` fixture named in the test list does not exist; the tests use inline macros.
+- Not traced: `.Formula` reads (TASK-14) go through `getCellFormula` and are recorded as ordinary value reads only if the value is read.
+
 ---
 
-## TASK-12 — `UnsupportedError` for excluded constructs (`packages/vba`)
+## TASK-12 — `UnsupportedError` for excluded constructs (`packages/vba`) ✅
 
+**Status:** Done (deferred items below)  
 **Requires:** REQ-12  
 **Depends on:** TASK-08
 
@@ -318,7 +334,7 @@ Not implemented in this pass. Each reports `UnsupportedError`, never a silent sk
    - File-system built-in names (`Open`, `Close`, `Print`, `Input`, `Kill`, `Dir`) → `UnsupportedError`.
    - `DoEvents`, `Shell`, `SendKeys` → `UnsupportedError`.
 2. Add `status` computation to `runMacro`:
-   - If `UnsupportedError` propagated (not caught by `On Error Resume Next`), `status = "failed"`.
+   - If `UnsupportedError` propagated (not caught by `On Error Resume Next`), `status = "partly resurrected"` and `stoppedAt = { module, line, construct }` is set (changed from `"failed"`: the cells written before the stop are real). `"failed"` is kept for other errors.
    - If trace contains any `"unsupported"` events, `status = "partly resurrected"`.
    - Otherwise `status = "fully resurrected"`.
 
@@ -326,13 +342,21 @@ Not implemented in this pass. Each reports `UnsupportedError`, never a silent sk
 - Executing `Declare Function …` → `UnsupportedError` with `construct = "Declare"`.
 - Executing `CreateObject("Scripting.FileSystemObject")` → `UnsupportedError` with `construct = "CreateObject"`.
 - A module with no unsupported constructs → `status = "fully resurrected"`.
-- A module with `Declare` → `status = "failed"` (no `On Error Resume Next`).
+- A macro that calls a `Declare`d function (no `On Error Resume Next`) → `status = "partly resurrected"` with `stoppedAt`.
 - A module with unsupported call under `On Error Resume Next` → `status = "partly resurrected"`.
+- Static scan names constructs as REQ-12.2 does (`Print #`, `Input #`, `CreateObject`, `New <Class>`, ...).
+
+### Done differently / deferred from TASK-12
+- Construct names are fixed in the parser (`Print #`, `Input #`, `Write #`, `Get #`, `Put #`, `Line Input #`) and in `constructs.ts` (`CreateObject`, `GetObject`, `DoEvents`, `Shell`, `SendKeys`, `Kill`, `Dir`).
+- `RunResult.staticUnsupported` lists every unsupported construct in the loaded modules without running them (statements the parser cannot model, calls to the excluded names, `New <Class>`), sorted by module and line. A module-level `Declare` is listed there; it is never executed. `RunResult.unsupported` still means "skipped at run time under On Error Resume Next".
+- A variable, parameter or procedure named like an excluded call (for example `Dim dir`) is not flagged.
+- Not done: `UserForm` and `Application.Run` to external workbooks are not detected.
 
 ---
 
-## TASK-13 — End-to-end fixture test
+## TASK-13 — End-to-end fixture test ✅
 
+**Status:** Done (deferred items below)  
 **Requires:** REQ-01 through REQ-12  
 **Depends on:** TASK-09, TASK-10, TASK-11, TASK-12
 
@@ -349,10 +373,18 @@ Not implemented in this pass. Each reports `UnsupportedError`, never a silent sk
 - `simple` fixture: all expected cells match, `status = "fully resurrected"`.
 - `loops` fixture: all expected cells match, `status = "fully resurrected"`.
 
+### Done differently / deferred from TASK-13
+- `packages/vba/tests/e2e.test.ts` covers every `fixtures/expected/<name>.json` instead of `simple` and `loops` (neither exists). For each fixture it opens `fixtures/build/<name>.xlsm` with `extractModules` and the SheetJS adapter, runs every listed macro in order on the same workbook, and compares `status`, every `cells` entry, every `empty` entry, the static `unsupported` list (`RunResult.staticUnsupported`) and `stoppedAt`. A final test saves the workbook to `.xlsx` and reads it back.
+- `dictionary_grouping` is an `it.todo` (needs the Scripting.Dictionary spec). When that spec lands, its oracle expects `unsupported: []`, so `Scripting.Dictionary` must be removed from the `CreateObject` static scan.
+- Passing needed one interpreter addition: `Range(Cells(r1, c1), Cells(r2, c2))` (used by `acts_by_category` and `demo_acts`).
+- The `loops` fixture and its build were not created; the existing fixtures already cover loops, `Select Case` and `Exit For`.
+- `npm run typecheck` already failed before this work (`rootDir` excludes `tests/`, no Node types, `parser.ts:102`); not changed.
+
 ---
 
-## TASK-14 — Workbook `Worksheets`/`Sheets` collection and `Rows.Count` / `End(xlUp)` (`packages/vba`)
+## TASK-14 — Workbook `Worksheets`/`Sheets` collection and `Rows.Count` / `End(xlUp)` (`packages/vba`) ✅
 
+**Status:** Done (deferred items below)  
 **Requires:** REQ-10  
 **Depends on:** TASK-08, TASK-10
 
@@ -370,10 +402,17 @@ Not implemented in this pass. Each reports `UnsupportedError`, never a silent sk
 - `Worksheets(1).Cells(5,1).End(xlUp).Row` returns the row of the last non-empty cell above row 5 in column A.
 - `ActiveSheet.Rows.Count` returns the number of rows in the used range (or 1 048 576 as the Excel sheet limit — either is acceptable and testable).
 
+### Done differently / deferred from TASK-14
+- Most of this task already existed from TASK-08 (`Worksheets`, `Sheets`, `ActiveSheet`, `Cells`, `Range`, `.Value`, `.End`, `xlUp`...). Added here: `Range.Formula` (get), `.Address` (absolute, no arguments), `.Rows.Count`, `.Columns.Count`, `.Count`, `.Offset`, `.Resize`.
+- Tests run on the SheetJS adapter (`packages/vba/tests/sheetjs-helper.ts`).
+- `Rows.Count` returns 1 048 576 and `Columns.Count` 16 384 (the Excel limits).
+- Not done: `Formula` assignment; `Address` arguments; `Rows(i)`, `Columns(i)`; `Worksheets.Count`; `UsedRange`; `ActiveSheet` follows the file's active tab only if SheetJS reports it (otherwise the first sheet).
+
 ---
 
-## TASK-15 — WorksheetFunction built-ins (`packages/vba`)
+## TASK-15 — WorksheetFunction built-ins (`packages/vba`) ✅
 
+**Status:** Done for `Sum`, `Count`, `CountA`, `Max`, `Min`, `Average` (rest deferred below)  
 **Requires:** REQ-06, REQ-08  
 **Depends on:** TASK-08, TASK-10
 
@@ -390,6 +429,13 @@ Not implemented in this pass. Each reports `UnsupportedError`, never a silent sk
 - `WorksheetFunction.CountIf(range, ">5")` returns the count of cells with value > 5.
 - `WorksheetFunction.VLookup(2, tableRange, 2, False)` returns the correct value from column 2.
 - `WorksheetFunction.Match(3, lookupArray, 0)` returns the 1-based position of `3` in the array.
+
+### Done differently / deferred from TASK-15
+- Done: `Application.WorksheetFunction.Sum/Count/CountA/Max/Min/Average` (and `WorksheetFunction.` without `Application`), in `builtins/worksheet.ts`. Ranges contribute numbers only; scalar arguments follow Excel (numeric strings and booleans count, other text is error 1004); `Average` of no numbers is error 1004; `Max`/`Min` of no numbers is 0.
+- Deferred, reported as `UnsupportedError("WorksheetFunction.<Name>")`: `SumIf`, `CountIf`, `VLookup`, `Index`, `Match`. The four tests above for them are not written.
+- Every other `Application` member (for example `ScreenUpdating`) is reported as `Application.<Member>`.
+- Errors stored in cells are read as text and skipped, where Excel would propagate them. An Empty or object scalar argument is reported as unsupported.
+- The functions read the range through `getValue()` (one traced read per cell) instead of a `RangeHandle.cells()` method, which the interface does not have.
 
 ---
 

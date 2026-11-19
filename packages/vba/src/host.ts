@@ -29,6 +29,8 @@ export interface SheetHandle {
   index: number;
   getCellValue(row: number, col: number): VBAValue;
   setCellValue(row: number, col: number, value: VBAValue): void;
+  /** Formula text with a leading "=", or null when the cell holds no formula. */
+  getCellFormula(row: number, col: number): string | null;
   getRange(ref: string): RangeHandle;
   usedRowCount(): number;
   usedColCount(): number;

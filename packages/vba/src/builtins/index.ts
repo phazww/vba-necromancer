@@ -29,5 +29,5 @@ export const KNOWN_UNIMPLEMENTED: ReadonlySet<string> = new Set([
   "getobject", "doevents", "shell", "sendkeys", "environ", "dir", "kill", "isdate", "iserror", "ismissing",
   "choose", "iif", "switch", "nz", "instrb", "lenb", "midb", "leftb", "rightb", "formatnumber",
   "formatcurrency", "formatpercent", "formatdatetime", "monthname", "weekdayname", "erase", "debug",
-  "application", "evaluate",
+  "evaluate",
 ]);

@@ -113,6 +113,10 @@ class MemorySheet implements SheetHandle {
     else this.cells.set(this.key(row, col), value);
   }
 
+  getCellFormula(): string | null {
+    return null;
+  }
+
   getRange(ref: string): RangeHandle {
     const [a, b] = ref.split(":");
     const first = parseCell(a);

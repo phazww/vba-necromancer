@@ -10,20 +10,27 @@
   "scripts": {
     "test": "vitest run --reporter=verbose",
     "build": "npm run build --workspaces --if-present",
-    "lint": "eslint . --ext .ts",
+    "lint": "eslint .",
     "typecheck": "tsc -b packages/ovba packages/vba packages/workbook app --noEmit",
     "fixtures:build": "vite-node fixtures/build/build.ts"
   },
   "devDependencies": {
+    "@preact/preset-vite": "^2.10.6",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/preact": "^3.2.6",
     "@types/node": "^26.6.6",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
+    "axe-core": "^4.14.1",
     "cfb": "^1.2.2",
     "eslint": "^9.0.0",
     "fast-check": "^3.22.0",
+    "jsdom": "^29.1.1",
+    "preact": "^10.29.8",
     "prettier": "^3.3.0",
     "typescript": "^5.5.0",
     "typescript-eslint": "^8.0.0",
-    "vitest": "^2.0.0"
+    "vitest": "^2.0.0",
+    "yaml": "^2.9.1"
   }
 }

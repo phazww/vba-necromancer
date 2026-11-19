@@ -4,7 +4,7 @@
 
 Kiroween 2026 entry, category **Resurrection**. Built spec-first with [Kiro](https://kiro.dev).
 
-> Status (18 Nov 2026): the file layer is done and verified; the interpreter and the UI are in progress. This README says what works today, not what is planned.
+> Status: the file layer, the interpreter and the browser UI work end to end on the fixture workbooks. This README says what works today, not what is planned. Live demo: _link to be added after the first deploy_.
 
 ## Why
 
@@ -21,9 +21,11 @@ Millions of business workbooks still depend on VBA: monthly acts, labour stateme
 | VBA lexer | done | property test: never throws on arbitrary input |
 | VBA parser | done | parses every fixture module; unsupported statements become AST nodes with line numbers |
 | VBA numeric semantics | done | `CInt`/`CLng`/`Round` banker's rounding on the stored double (`Round(2.675, 2) = 2.67` as in VBA), `\` and `Mod` operand rounding, Integer overflow = error 6, VBA Date epoch 1899-12-30 |
-| Interpreter, `Range`/`Cells`, execution trace | in progress | hand-written expected results in `fixtures/expected/` |
+| Interpreter, `Range`/`Cells`, execution trace | done for the fixture subset | all seven fixture workbooks match their hand-written expected results in `fixtures/expected/` |
 | `Scripting.Dictionary` (`CreateObject` and `New`) | done | unit and property tests; `dictionary_grouping` fixture matches its hand-written oracle and the array version cell by cell. Details: `docs/scripting-dictionary.md` |
-| Browser UI | in progress | |
+| Browser UI | works end to end | drop or choose a file (or use the two built-in samples), list sheets, modules and macros with a prediction from the static scan, run a macro, see changed cells in the grid, the trace, the graveyard and the VBA source, download the result as `.xlsx`. Tested with component tests, two end-to-end tests that drive the DOM, axe checks, performance budgets and a build test. `docs/ui-checklist.md` lists what still needs a person: real keyboard and screen reader walk, 375 px, light and dark, offline reload, the download opened in Excel or LibreOffice |
+
+What the UI does not do yet: it does not read the buttons drawn on a sheet (macros are listed and run from a list), it cannot read VBA from legacy `.xls` files (the sheets open, the macros do not), it does not recalculate formulas (cached values are shown), and it does not apply number formats (dates and currency show as stored numbers). The same list is in the app, under "What this does not do yet". One performance budget is not met: running `BuildActs` on the 40-row demo takes 95 to 150 ms instead of under 100 ms, because of a scan in `packages/workbook` (`BACKLOG.md`, item 8).
 
 ## Honest by design
 
@@ -45,13 +47,26 @@ python3 -m venv .venv-tools && .venv-tools/bin/pip install oletools==0.60.2
 
 See [`docs/kiro-usage.md`](docs/kiro-usage.md): the spec (`.kiro/specs/vba-resurrection-core`), steering docs, agent hooks, which tasks Kiro implemented, and which bugs review caught and how.
 
+## Run and deploy
+
+```bash
+npm install
+npm run dev -w app       # dev server for the browser UI
+npm run build -w app     # static site in app/dist, with a size report
+npm run preview -w app   # serve app/dist locally
+```
+
+The build is a static site with relative URLs (`base: "./"`), so it works from any sub-path. It makes no network request after the page has loaded, and the page carries a Content-Security-Policy that forbids connections. The build prints the raw and gzip size of every file and fails when the total gzip size is over 600 KB.
+
+To publish on GitHub Pages: in the repository, open Settings, then Pages, and set Source to "GitHub Actions". After that every push to `main` runs `.github/workflows/pages.yml` (typecheck, lint, tests, build, deploy). The site is then at `https://<user>.github.io/<repository>/`.
+
 ## Layout
 
 ```
 packages/ovba      ZIP, CFB, MS-OVBA decompression, dir stream, module extraction
-packages/vba       lexer, parser, numeric semantics, interpreter (in progress)
-packages/workbook  workbook model over an xlsx library (in progress)
-app/               browser UI (in progress)
+packages/vba       lexer, parser, numeric semantics, interpreter
+packages/workbook  workbook model over an xlsx library
+app/               browser UI (Preact, Vite): model, state, components, tests
 fixtures/          VBA sources, expected results, builder, built .xlsm files
 tools/             independent cross-checks
 ```

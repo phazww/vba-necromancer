@@ -17,3 +17,8 @@ Recorded on a Mac in Chrome, to prove the point: no Windows, no Excel. Voice-ove
 - Fixtures and the demo workbook pass end to end.
 - The Excel-on-Windows screenshot of the same results is made in advance (or replaced by the hand-checked numbers if no Windows machine is available; then say so in the voice-over, do not imply it).
 - The test link is public and loads in under 3 seconds.
+
+## Known gap against this script
+- **0:30 to 0:50, "the button found on the sheet".** The UI does not read shapes or form-control buttons yet (`BACKLOG.md` item 2; out of scope for the `resurrection-ui` spec). What the app shows instead is the macro list in the Exhume panel: `Module1.BuildActs` with "Predicted: fully resurrected" and a Run button. Either record that screen and change the voice-over to say the macros are listed from the VBA project, or do not record this row until button reading exists. The voice-over above has not been changed.
+- **0:50 to 1:20, "totals appear".** The run itself is real. The comparison with Excel on Windows is still a screenshot made outside the app.
+

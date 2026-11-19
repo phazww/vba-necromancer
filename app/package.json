@@ -10,7 +10,8 @@
   "dependencies": {
     "@vba-necromancer/ovba": "*",
     "@vba-necromancer/vba": "*",
-    "@vba-necromancer/workbook": "*"
+    "@vba-necromancer/workbook": "*",
+    "preact": "^10.29.8"
   },
   "devDependencies": {
     "vite": "^5.0.0"

@@ -11,4 +11,17 @@ export default tseslint.config(
       "eslint.config.js",
     ],
   },
+  {
+    files: ["app/src/**/*.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "error",
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "JSXAttribute[name.name='dangerouslySetInnerHTML']",
+          message: "dangerouslySetInnerHTML is forbidden; render user text as children.",
+        },
+      ],
+    },
+  },
 );

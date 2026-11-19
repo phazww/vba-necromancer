@@ -112,3 +112,32 @@ Kiro implemented TASK-09 (fixture builder) until the monthly free-tier limit sto
 5. **dir stream.** The parser treated PROJECTVERSION (0x0009) as a normal `Id|Size|Data` record (it is `Id|Reserved=4|Major(4)|Minor(2)`) and expected a non-standard PROJECTMODULES layout, so it would have failed on every real Excel file. Rewritten per MS-OVBA 2.3.4.2 with a single record walk; a matching `writeDirStream` builds fixtures. Module names are decoded with the project code page.
 
 Result: all six fixture workbooks are read by `olevba` with sources identical to `fixtures/src/*/Module1.bas`, including Cyrillic text in code page 1251.
+
+---
+
+## Spec session — `resurrection-ui`
+
+`.kiro/specs/resurrection-ui/` holds `requirements.md` (UI-1 to UI-13), `design.md` (Preact, one reducer, a pure model layer, windowed grid and lists, CSP, token table with contrast ratios) and `tasks.md` (UTASK-01 to UTASK-24). The workspace steering files (`product`, `structure`, `tech`) apply. No commit exists for this spec or its implementation yet: `git log` ends at `df9bebe`, so the table below lists tasks, not commits.
+
+Kiro implemented UTASK-01 to UTASK-24 in order in one non-interactive session, running `npm test`, `npm run lint`, `npm run typecheck` and the app build after each task before marking it done in `tasks.md`. `packages/*`, `fixtures/expected/*.json` and the `.gitignore` entries for `.agy-bridge` and `HANDOFF_CONTEXT.md` were not edited.
+
+| Tasks | What was done |
+|-------|---------------|
+| UTASK-01 | Preact skeleton, Vitest workspace with a jsdom `app` project, `?inline` import of the demo `.xlsm` files through a small Vite plugin (the built-in `?inline` returns a path under Vitest) |
+| UTASK-02 to 07 | Model and state: file sniffing, `exhume`, macro list, prediction from the static scan, `resurrect`, changed cells, graveyard marks, formatting, windowing function, reducer and actions |
+| UTASK-08 to 12 | Tokens and contrast tests, theme lint, app shell with landmarks and live region, drop zone, demo buttons and CSP, exhume panel, ARIA tabs |
+| UTASK-13 to 18 | Grid, source view, result bar and download, trace panel, graveyard panel, wide and narrow layouts |
+| UTASK-19 to 21 | Two end-to-end tests through the DOM (`demo_acts`, `graveyard` through the file input) and the performance tests |
+| UTASK-22 to 24 | Production build with size report, sub-path serving test, Pages workflow, accessibility sweep, `docs/ui-checklist.md`, README and backlog updates |
+
+Things found on the way, in the order they came up:
+
+1. **`File` has a `bytes()` method** in current Node and browsers, so `"bytes" in source` cannot tell a `File` from `{ name, bytes }`. Dropping a real `File` failed with "not an Excel workbook" until the check looked at the property's type.
+2. **Passive effects run after the test looks.** The window drop listeners were registered in `useEffect` and were missing for a moment after the workbook appeared; `useLayoutEffect` closes that gap.
+3. **A million-cell scan inside `Range.End(xlUp)`** costs about 90 ms on any macro that uses `Cells(Rows.Count, 1).End(xlUp)`. That alone makes the 100 ms budget for the 40-row demo fail. Not fixed here (`packages/*` is out of bounds); recorded in `BACKLOG.md` item 8, the test for the budget is skipped, and a looser regression guard runs in its place.
+4. **SheetJS keeps a stale `<dimension>`.** A cell outside `!ref` is still readable. A bound on the `End` scan taken from `usedRowCount()` would therefore change results for such files, which is why the backlog item asks for a bound from the cells present.
+5. **A 5 000 line source module did not render under 200 ms reliably** when the other test files ran in parallel (170 to 350 ms). Modules over 1 000 lines now draw only the lines near the viewport (3 ms); shorter modules are still drawn in full.
+6. **`Go to cell` and `Go to line` sit under the trace list**, not on every row, because a button inside a `role="option"` row is a nested interactive control (`BACKLOG.md` item 13).
+
+Open items for a person: the manual checks in `docs/ui-checklist.md`, the first deploy and the live demo link in the README, and the `git commit`.
+

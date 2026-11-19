@@ -2,30 +2,85 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--border);
+  padding: var(--space-3) var(--space-6);
+  border-bottom: 1px solid var(--hairline);
   background: var(--surface);
 }
 
 .app-header h1 {
-  font-size: var(--text-xl);
-  line-height: 1.2;
+  font-size: var(--text-md);
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  column-gap: var(--space-3);
 }
 
 .tagline {
   color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.tombstone {
+  color: var(--accent);
+  flex: none;
+}
+
+.header-link {
+  margin-left: auto;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.header-link:hover {
+  color: var(--text);
+  text-decoration: underline;
 }
 
 main {
   display: block;
-  padding: var(--space-4);
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-6);
   min-width: 0;
 }
 
 .app-footer {
-  padding: var(--space-4);
-  border-top: 1px solid var(--border);
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-6) var(--space-6);
+  border-top: 1px solid var(--hairline);
   color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.app-footer > * + * {
+  margin-top: var(--space-2);
+}
+
+/* First screen: what to do on the left, what it produces on the right. */
+.landing {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: center;
+  min-height: calc(100vh - 13rem);
+  padding: var(--space-6) 0;
+}
+
+@media (min-width: 960px) {
+  .landing {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: 4rem;
+  }
+}
+
+.landing-text > * + * {
+  margin-top: var(--space-6);
 }
 
 .workspace {
@@ -36,7 +91,7 @@ main {
 
 @media (min-width: 960px) {
   .workspace {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   }
 }
 
@@ -53,7 +108,7 @@ main {
 
 @media (min-width: 960px) {
   .layout {
-    grid-template-columns: minmax(16rem, 22rem) minmax(0, 1fr);
+    grid-template-columns: minmax(15rem, 18rem) minmax(0, 1fr);
     align-items: start;
   }
 }
@@ -65,8 +120,12 @@ main {
 }
 
 .macro {
-  padding: var(--space-2) 0;
-  border-top: 1px solid var(--border);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--hairline);
+}
+
+.macro:first-child {
+  border-top: 0;
 }
 
 .macro-head {
@@ -116,6 +175,48 @@ main {
   }
 
   main {
-    padding: var(--space-2);
+    padding: var(--space-4);
   }
+
+  .app-header,
+  .app-footer {
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+  }
+
+  .landing {
+    min-height: 0;
+    padding: var(--space-4) 0;
+  }
+
+  .tagline {
+    display: none;
+  }
+
+  .dropzone {
+    padding: var(--space-5);
+  }
+
+  .dropzone h2 {
+    font-size: var(--text-xl);
+  }
+
+  .preview-table th:nth-child(3),
+  .preview-table td:nth-child(3),
+  .preview-file {
+    display: none;
+  }
+
+  .preview-table th,
+  .preview-table td {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .preview-table td:first-child {
+    white-space: normal;
+  }
+}
+
+.landing-text > .empty-state + * {
+  margin-top: var(--space-3);
 }

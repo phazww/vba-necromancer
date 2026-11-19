@@ -26,10 +26,13 @@ export function Header() {
   return (
     <header class="app-header">
       <Tombstone />
-      <div>
+      <div class="brand">
         <h1>VBA Necromancer</h1>
-        <p class="tagline">Bring dead macros back, in your browser.</p>
+        <p class="tagline">Old Excel macros, run again in your browser</p>
       </div>
+      <a class="header-link" href="https://github.com/phazww/vba-necromancer">
+        Source on GitHub
+      </a>
     </header>
   );
 }

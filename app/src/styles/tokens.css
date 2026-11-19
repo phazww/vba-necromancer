@@ -12,6 +12,13 @@
   --changed-bar: #8a5a00;
   --danger: #8f2d1f;
   --focus: #0b5cad;
+  --hairline: #ddd7cb;
+  --surface-2: #efebe2;
+
+  --radius-control: 8px;
+  --radius-inner: 6px;
+  --radius-panel: 12px;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
 
   --focus-width: 2px;
 
@@ -26,11 +33,13 @@
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
   --text-sm: 0.875rem;
   --text-base: 1rem;
+  --text-md: 1.125rem;
   --text-lg: 1.25rem;
   --text-xl: 1.75rem;
+  --text-display: 2.5rem;
 
   --row-height: 24px;
-  --col-width: 96px;
+  --col-width: 128px;
   --control-height: 36px;
 }
 
@@ -47,5 +56,7 @@
     --changed-bar: #e0b04a;
     --danger: #e58b7b;
     --focus: #7ab4f0;
+    --hairline: #30353a;
+    --surface-2: #25292d;
   }
 }

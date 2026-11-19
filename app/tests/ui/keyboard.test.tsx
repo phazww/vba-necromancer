@@ -84,6 +84,7 @@ describe("tab order", () => {
     const { container } = render(<App />);
     expect(tabOrder(container).map((e) => e.textContent?.trim())).toEqual([
       "Skip to workbook",
+      "Source on GitHub",
       "Choose a file",
       "Try the demo",
       "Try the graveyard sample",

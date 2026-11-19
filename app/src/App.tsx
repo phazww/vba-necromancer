@@ -2,10 +2,9 @@ import type { Deps } from "./state/actions";
 import { StoreProvider, useStore } from "./state/context";
 import type { AppState } from "./state/types";
 import { Footer } from "./ui/Footer";
-import { DemoButtons } from "./ui/DemoButtons";
-import { DropZone } from "./ui/DropZone";
 import { ExhumePanel } from "./ui/ExhumePanel";
 import { Header, SkipLink } from "./ui/Header";
+import { Landing } from "./ui/Landing";
 import { ResultBar } from "./ui/ResultBar";
 import { Workspace } from "./ui/Workspace";
 import { LoadError } from "./ui/LoadError";
@@ -29,11 +28,7 @@ function Workbook() {
           </div>
         </div>
       ) : (
-        <>
-          <p class="empty-state">Nothing buried here yet</p>
-          <DropZone />
-          <DemoButtons />
-        </>
+        <Landing />
       )}
     </main>
   );

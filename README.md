@@ -4,7 +4,7 @@
 
 Kiroween 2026 entry, category **Resurrection**. Built spec-first with [Kiro](https://kiro.dev).
 
-> Status: the file layer, the interpreter and the browser UI work end to end on the fixture workbooks. This README says what works today, not what is planned. Live demo: _link to be added after the first deploy_.
+> Status: the file layer, the interpreter and the browser UI work end to end on the fixture workbooks. This README says what works today, not what is planned. Live demo: **https://phazww.github.io/vba-necromancer/** (click "Try the demo", then Run).
 
 ## Why
 
@@ -73,4 +73,4 @@ tools/             independent cross-checks
 
 ## License
 
-To be added before the repository is made public (the hackathon requires an open-source license).
+[MIT](LICENSE).

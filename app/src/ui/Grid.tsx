@@ -5,7 +5,7 @@ import { colLetters, formatValue } from "../model/format";
 import { nextIndex } from "./useRovingFocus";
 import { DEFAULT_VIEWPORT, visibleRange } from "./useWindow";
 
-export const COL_WIDTH = 96;
+export const COL_WIDTH = 128;
 export const HEADER_WIDTH = 56;
 const MIN_ROWS = 20;
 const MIN_COLS = 8;

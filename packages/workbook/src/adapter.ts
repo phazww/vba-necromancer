@@ -25,6 +25,9 @@ function cellToValue(cell: XLSX.CellObject | undefined): VBAValue {
 }
 
 export class SheetJSSheet implements RangeSheet {
+  /** Bounds of the cells present; null when they must be recomputed. Never derived from !ref. */
+  private bounds: { row: number; col: number } | null = null;
+
   constructor(
     readonly name: string,
     readonly index: number,
@@ -37,13 +40,38 @@ export class SheetJSSheet implements RangeSheet {
 
   /** The formula text of a cell with a leading "=", or null when the cell holds no formula. */
   getCellFormula(row: number, col: number): string | null {
-    const f = (this.ws[XLSX.utils.encode_cell({ r: row - 1, c: col - 1 })] as XLSX.CellObject | undefined)?.f;
+    const f = (
+      this.ws[XLSX.utils.encode_cell({ r: row - 1, c: col - 1 })] as XLSX.CellObject | undefined
+    )?.f;
     return f ? `=${f}` : null;
+  }
+
+  private computeBounds(): { row: number; col: number } {
+    if (this.bounds) return this.bounds;
+    let row = 0;
+    let col = 0;
+    for (const key of Object.keys(this.ws)) {
+      if (key.startsWith("!")) continue;
+      const pos = XLSX.utils.decode_cell(key);
+      if (pos.r + 1 > row) row = pos.r + 1;
+      if (pos.c + 1 > col) col = pos.c + 1;
+    }
+    this.bounds = { row, col };
+    return this.bounds;
+  }
+
+  lastRowBound(): number {
+    return this.computeBounds().row;
+  }
+
+  lastColBound(): number {
+    return this.computeBounds().col;
   }
 
   setCellValue(row: number, col: number, value: VBAValue): void {
     const addr = XLSX.utils.encode_cell({ r: row - 1, c: col - 1 });
     if (value === null) {
+      if (this.bounds && (row >= this.bounds.row || col >= this.bounds.col)) this.bounds = null;
       delete this.ws[addr];
       return;
     }
@@ -55,13 +83,18 @@ export class SheetJSSheet implements RangeSheet {
           ? { t: "b", v: value }
           : { t: "s", v: value };
     this.ws[addr] = cell;
+    if (this.bounds)
+      this.bounds = { row: Math.max(this.bounds.row, row), col: Math.max(this.bounds.col, col) };
     this.growRef(row, col);
   }
 
   private growRef(row: number, col: number): void {
     const ref = this.ws["!ref"];
     if (!ref) {
-      this.ws["!ref"] = XLSX.utils.encode_range({ s: { r: row - 1, c: col - 1 }, e: { r: row - 1, c: col - 1 } });
+      this.ws["!ref"] = XLSX.utils.encode_range({
+        s: { r: row - 1, c: col - 1 },
+        e: { r: row - 1, c: col - 1 },
+      });
       return;
     }
     const r = XLSX.utils.decode_range(ref);

@@ -355,6 +355,41 @@
   line-height: var(--row-height);
 }
 
+/* A button anchored here: the caption sits beside the value and never covers it. */
+.cell--marked {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.cell-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cell--number .cell-value {
+  text-align: right;
+}
+
+.grid-mark {
+  flex: 0 1 auto;
+  max-width: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 var(--space-1);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-inner);
+  background: var(--surface-2);
+  color: var(--accent);
+  font-size: 0.75em;
+  line-height: 1.5;
+  pointer-events: none;
+}
+
 .cell--number {
   text-align: right;
 }

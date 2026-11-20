@@ -91,7 +91,7 @@ describe("exhume panel: files without macros", () => {
 
   it("explains that .xls VBA cannot be read yet", () => {
     const base = exhume("demo_acts.xlsm", fixtureBytes("demo_acts"));
-    const xls: Exhumed = { ...base, fileName: "old.xls", vba: "unreadable-xls", modules: [], macros: [], procedureCount: 0 };
+    const xls: Exhumed = { ...base, fileName: "old.xls", vba: "unreadable-xls", modules: [], macros: [], buttons: [], procedureCount: 0 };
     render(<App initial={stateWith(xls)} />);
     expect(screen.getByText(/VBA in \.xls files cannot be read yet/)).toBeTruthy();
     expect(screen.queryAllByRole("button", { name: /^Run / })).toHaveLength(0);

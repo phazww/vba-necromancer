@@ -2,7 +2,10 @@ import { describe, it, expect } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/preact";
 import * as XLSX from "xlsx";
 import { openWorkbook } from "@vba-necromancer/workbook";
+import axe from "axe-core";
 import { App } from "../../src/App";
+import { cellKey } from "../../src/model/changes";
+import { resolveButtons } from "../../src/model/buttons";
 import { exhume, exhumeParts } from "../../src/model/exhume";
 import { initialState, reduce } from "../../src/state/reducer";
 import { Grid, gridSize } from "../../src/ui/Grid";
@@ -196,5 +199,116 @@ describe("GridView in the app", () => {
     expect(cells(container).length).toBeGreaterThan(0);
     expect(container.querySelectorAll(".cell--changed")).toHaveLength(0);
     expect(screen.getByRole("tab", { name: "Журнал" }).getAttribute("aria-selected")).toBe("true");
+  });
+});
+
+describe("Button marks in the grid (BTN-06)", () => {
+  const rows: Cell[][] = [
+    ["a", 5],
+    ["b", 6],
+  ];
+  const marks = new Map([
+    [cellKey(1, 2), "Build"],
+    [cellKey(5, 5), "Empty cell"],
+  ]);
+
+  it("shows the caption in the anchor cell, also when the cell is empty", () => {
+    const { container } = render(
+      <Grid sheet={sheetOf(rows)} selected={null} marks={marks} onSelectCell={noop} />,
+    );
+    expect(cellAt(container, 5, 5)?.querySelector(".grid-mark")?.textContent).toBe("Empty cell");
+  });
+
+  it("keeps the value as text and as accessible name; the mark is hidden and not focusable", () => {
+    const { container } = render(
+      <Grid sheet={sheetOf(rows)} selected={null} marks={marks} onSelectCell={noop} />,
+    );
+    const cell = cellAt(container, 1, 2) as HTMLElement;
+    expect(cell.querySelector(".cell-value")?.textContent).toBe("5");
+    expect(screen.getByRole("gridcell", { name: "5" })).toBe(cell);
+    const mark = cell.querySelector(".grid-mark") as HTMLElement;
+    expect(mark.textContent).toBe("Build");
+    expect(mark.getAttribute("aria-hidden")).toBe("true");
+    expect(mark.hasAttribute("tabindex")).toBe(false);
+    expect(cell.querySelectorAll("[tabindex]")).toHaveLength(0);
+    expect(cell.querySelectorAll("button, a, input")).toHaveLength(0);
+  });
+
+  it("leaves unmarked cells unchanged", () => {
+    const plain = render(<Grid sheet={sheetOf(rows)} selected={null} onSelectCell={noop} />);
+    const before = cellAt(plain.container, 1, 1)?.outerHTML;
+    plain.unmount();
+    const { container } = render(
+      <Grid sheet={sheetOf(rows)} selected={null} marks={marks} onSelectCell={noop} />,
+    );
+    expect(cellAt(container, 1, 1)?.outerHTML).toBe(before);
+    expect(cellAt(container, 1, 1)?.className).not.toContain("cell--marked");
+    expect(container.querySelectorAll(".grid-mark")).toHaveLength(2);
+  });
+
+  it("does not render a mark for a cell outside the rendered window", () => {
+    const far = new Map([[cellKey(900, 1), "Far away"]]);
+    const { container } = render(
+      <Grid sheet={sheetOf(rows)} selected={null} marks={far} onSelectCell={noop} />,
+    );
+    expect(container.querySelectorAll(".grid-mark")).toHaveLength(0);
+    expect(container.textContent).not.toContain("Far away");
+  });
+
+  it("has no axe violations with a mark in the grid", async () => {
+    const { container } = render(
+      <Grid sheet={sheetOf(rows)} selected={null} marks={marks} onSelectCell={noop} />,
+    );
+    const results = await axe.run(container, { rules: { "color-contrast": { enabled: false } } });
+    expect(results.violations.map((v) => v.id)).toEqual([]);
+  });
+
+  it("marks appear only on the visible sheet", () => {
+    const base = exhume("demo_acts.xlsm", fixtureBytes("demo_acts"));
+    const buttons = resolveButtons(
+      [
+        {
+          sheet: "Журнал",
+          caption: "On journal",
+          anchor: "H2",
+          macroRef: "BuildActs",
+          source: "form-control",
+        },
+        {
+          sheet: "Акты",
+          caption: "On acts",
+          anchor: "H3",
+          macroRef: "BuildActs",
+          source: "form-control",
+        },
+      ],
+      base.macros,
+      base.fileName,
+    );
+    const state = reduce(initialState(), {
+      type: "load-ok",
+      exhumed: { ...base, buttons },
+      notice: null,
+    });
+    const { container } = render(<App initial={state} />);
+    expect(Array.from(container.querySelectorAll(".grid-mark")).map((m) => m.textContent)).toEqual([
+      "On journal",
+    ]);
+    fireEvent.click(screen.getByRole("tab", { name: "Акты" }));
+    expect(Array.from(container.querySelectorAll(".grid-mark")).map((m) => m.textContent)).toEqual([
+      "On acts",
+    ]);
+  });
+
+  it("end to end: demo_invoice.xlsm shows the mark Build invoice in H2 of Log", () => {
+    const state = reduce(initialState(), {
+      type: "load-ok",
+      exhumed: exhume("demo_invoice.xlsm", fixtureBytes("demo_invoice")),
+      notice: null,
+    });
+    const { container } = render(<App initial={state} />);
+    const h2 = cellAt(container, 2, 8) as HTMLElement;
+    expect(h2.querySelector(".grid-mark")?.textContent).toBe("Build invoice");
+    expect(container.querySelectorAll(".grid-mark")).toHaveLength(1);
   });
 });

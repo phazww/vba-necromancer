@@ -8,6 +8,8 @@
  *   xl/_rels/workbook.xml.rels
  *   xl/sharedStrings.xml
  *   xl/worksheets/sheet<n>.xml  (one per sheet)
+ *   xl/worksheets/_rels/sheet<n>.xml.rels, xl/drawings/vmlDrawing<k>.vml
+ *                               (only for sheets with `buttons` in cells.json: Form Control buttons)
  *   xl/vbaProject.bin            (CFB with VBA project)
  *
  * xl/vbaProject.bin is a Compound File Binary whose VBA/ storage contains:
@@ -92,10 +94,6 @@ function encodeString(s: string, codePage: number): Uint8Array {
 
 // MS-OVBA compression: the same implementation the extractor is tested against.
 
-
-
-
-
 /** Build a decompressed dir stream for one procedural module. */
 function buildCFB(streams: StreamEntry[]): Uint8Array {
   // Compound File Binary written by SheetJS cfb, a widely used implementation,
@@ -132,7 +130,9 @@ function buildProjectStream(projectName: string, moduleName: string, codePage: n
 function buildZip(files: { name: string; data: Uint8Array }[]): Uint8Array {
   const entries: Record<string, Uint8Array> = {};
   for (const f of files) entries[f.name] = f.data;
-  return zipSync(entries, { level: 6 });
+  // A fixed modification time (local-time constructor, so the DOS fields are the same in every time zone):
+  // building twice gives identical bytes.
+  return zipSync(entries, { level: 6, mtime: new Date(2026, 0, 1, 0, 0, 0) });
 }
 
 // ---------------------------------------------------------------------------
@@ -173,7 +173,11 @@ function escapeXml(s: string): string {
     .replace(/'/g, "&apos;");
 }
 
-function buildWorksheetXml(sheet: SheetDef, sharedStrings: string[]): string {
+function buildWorksheetXml(
+  sheet: SheetDef,
+  sharedStrings: string[],
+  hasLegacyDrawing = false,
+): string {
   // Map string values to shared string indices
   const ssIndex = new Map<string, number>();
   for (const c of sheet.cells) {
@@ -193,7 +197,11 @@ function buildWorksheetXml(sheet: SheetDef, sharedStrings: string[]): string {
 
   let xml =
     `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n` +
-    `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">\n` +
+    `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"` +
+    (hasLegacyDrawing
+      ? ` xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"`
+      : "") +
+    `>\n` +
     `  <sheetData>\n`;
 
   for (const [rowNum, cells] of Array.from(rows.entries()).sort(([a], [b]) => a - b)) {
@@ -212,7 +220,9 @@ function buildWorksheetXml(sheet: SheetDef, sharedStrings: string[]): string {
     xml += `    </row>\n`;
   }
 
-  xml += `  </sheetData>\n</worksheet>\n`;
+  xml += `  </sheetData>\n`;
+  if (hasLegacyDrawing) xml += `  <legacyDrawing r:id="rId1"/>\n`;
+  xml += `</worksheet>\n`;
   return xml;
 }
 
@@ -275,13 +285,16 @@ function buildRootRels(): string {
   );
 }
 
-function buildContentTypes(sheets: SheetDef[]): string {
+function buildContentTypes(sheets: SheetDef[], withVml: boolean): string {
   let xml =
     `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n` +
     `<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">\n` +
     `  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>\n` +
     `  <Default Extension="xml" ContentType="application/xml"/>\n` +
     `  <Default Extension="bin" ContentType="application/vnd.ms-office.activeX+xml"/>\n` +
+    (withVml
+      ? `  <Default Extension="vml" ContentType="application/vnd.openxmlformats-officedocument.vmlDrawing"/>\n`
+      : "") +
     `  <Override PartName="/xl/workbook.xml" ` +
     `ContentType="application/vnd.ms-excel.sheet.macroEnabled.main+xml"/>\n` +
     `  <Override PartName="/xl/vbaProject.bin" ` +
@@ -298,16 +311,82 @@ function buildContentTypes(sheets: SheetDef[]): string {
 }
 
 // ---------------------------------------------------------------------------
+// Form Control buttons (BTN-07): VML drawing, sheet relationships, legacyDrawing
+// ---------------------------------------------------------------------------
+
+interface ButtonDef {
+  sheet: string;
+  text: string;
+  macro: string;
+  /** Top-left cell, e.g. "H2". */
+  anchor: string;
+}
+
+function parseAnchor(anchor: string): { row0: number; col0: number } {
+  const m = /^([A-Z]{1,3})([1-9]\d*)$/.exec(anchor);
+  if (!m) throw new Error(`Bad button anchor: ${anchor}`);
+  let col = 0;
+  for (const ch of m[1]!) col = col * 26 + (ch.charCodeAt(0) - 64);
+  return { row0: Number(m[2]) - 1, col0: col - 1 };
+}
+
+/** The VML drawing of one sheet, in the form Excel writes for legacy Form Control buttons. */
+function buildVml(buttons: ButtonDef[], moduleName: string): string {
+  let xml =
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n` +
+    `<xml xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" ` +
+    `xmlns:x="urn:schemas-microsoft-com:office:excel">\n` +
+    ` <o:shapelayout v:ext="edit">\n  <o:idmap v:ext="edit" data="1"/>\n </o:shapelayout>\n` +
+    ` <v:shapetype id="_x0000_t201" coordsize="21600,21600" o:spt="201" path="m,l,21600r21600,l21600,xe">\n` +
+    `  <v:stroke joinstyle="miter"/>\n  <v:path shadowok="f" o:extrusionok="f" strokeok="f" fillok="f" o:connecttype="rect"/>\n` +
+    `  <o:lock v:ext="edit" shapetype="t"/>\n </v:shapetype>\n`;
+  buttons.forEach((b, i) => {
+    const { row0, col0 } = parseAnchor(b.anchor);
+    const macro = b.macro.includes(".") ? b.macro : `${moduleName}.${b.macro}`;
+    xml +=
+      ` <v:shape id="_x0000_s${1025 + i}" type="#_x0000_t201" ` +
+      `style="position:absolute;margin-left:0;margin-top:0;width:96pt;height:30pt;z-index:${i + 1};mso-wrap-style:tight" ` +
+      `o:button="t" fillcolor="buttonFace [67]" strokecolor="windowText [64]" o:insetmode="auto">\n` +
+      `  <v:fill color2="buttonFace [67]" o:detectmouseclick="t"/>\n` +
+      `  <o:lock v:ext="edit" rotation="t"/>\n` +
+      `  <v:textbox style="mso-direction-alt:auto" o:singleclick="f"><div style="text-align:center">` +
+      `<font face="Calibri" size="220" color="auto">${escapeXml(b.text)}</font></div></v:textbox>\n` +
+      `  <x:ClientData ObjectType="Button">\n` +
+      `   <x:Anchor>${col0}, 15, ${row0}, 4, ${col0 + 2}, 15, ${row0 + 2}, 4</x:Anchor>\n` +
+      `   <x:PrintObject>False</x:PrintObject>\n   <x:AutoFill>False</x:AutoFill>\n` +
+      `   <x:FmlaMacro>${escapeXml(macro)}</x:FmlaMacro>\n` +
+      `   <x:TextHAlign>Center</x:TextHAlign>\n   <x:TextVAlign>Center</x:TextVAlign>\n` +
+      `   <x:Row>${row0}</x:Row>\n   <x:Column>${col0}</x:Column>\n` +
+      `  </x:ClientData>\n </v:shape>\n`;
+  });
+  return xml + `</xml>\n`;
+}
+
+function buildSheetRels(vmlNumber: number): string {
+  return (
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n` +
+    `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n` +
+    `  <Relationship Id="rId1" ` +
+    `Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/vmlDrawing" ` +
+    `Target="../drawings/vmlDrawing${vmlNumber}.vml"/>\n` +
+    `</Relationships>\n`
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main: build all fixtures
 // ---------------------------------------------------------------------------
 
 interface CellsJson {
   codePage?: number;
   sheets: SheetDef[];
+  buttons?: ButtonDef[];
 }
 
 function buildFixture(fixtureName: string, srcDir: string, outDir: string): void {
-  const cellsJson: CellsJson = JSON.parse(fs.readFileSync(path.join(srcDir, "cells.json"), "utf-8"));
+  const cellsJson: CellsJson = JSON.parse(
+    fs.readFileSync(path.join(srcDir, "cells.json"), "utf-8"),
+  );
   const codePage = cellsJson.codePage ?? 1252;
 
   // Collect all .bas files
@@ -362,24 +441,45 @@ function buildFixture(fixtureName: string, srcDir: string, outDir: string): void
   ]);
 
   // Build XLSM ZIP contents
+  const buttons = cellsJson.buttons ?? [];
+  for (const b of buttons) {
+    if (!cellsJson.sheets.some((sh) => sh.name === b.sheet)) {
+      throw new Error(`[${fixtureName}] button "${b.text}" names an unknown sheet: ${b.sheet}`);
+    }
+  }
   const sharedStrings: string[] = [];
   const worksheetXmls: { name: string; xml: string }[] = [];
+  const drawingFiles: { name: string; data: Uint8Array }[] = [];
+  const enc = (s: string) => new TextEncoder().encode(s);
+  let vmlCount = 0;
   for (let i = 0; i < cellsJson.sheets.length; i++) {
+    const sheet = cellsJson.sheets[i]!;
+    const own = buttons.filter((b) => b.sheet === sheet.name);
+    if (own.length > 0) {
+      vmlCount++;
+      drawingFiles.push({
+        name: `xl/drawings/vmlDrawing${vmlCount}.vml`,
+        data: enc(buildVml(own, moduleName)),
+      });
+      drawingFiles.push({
+        name: `xl/worksheets/_rels/sheet${i + 1}.xml.rels`,
+        data: enc(buildSheetRels(vmlCount)),
+      });
+    }
     worksheetXmls.push({
       name: `xl/worksheets/sheet${i + 1}.xml`,
-      xml: buildWorksheetXml(cellsJson.sheets[i]!, sharedStrings),
+      xml: buildWorksheetXml(sheet, sharedStrings, own.length > 0),
     });
   }
 
-  const enc = (s: string) => new TextEncoder().encode(s);
-
   const zipFiles: { name: string; data: Uint8Array }[] = [
-    { name: "[Content_Types].xml", data: enc(buildContentTypes(cellsJson.sheets)) },
+    { name: "[Content_Types].xml", data: enc(buildContentTypes(cellsJson.sheets, vmlCount > 0)) },
     { name: "_rels/.rels", data: enc(buildRootRels()) },
     { name: "xl/workbook.xml", data: enc(buildWorkbookXml(cellsJson.sheets)) },
     { name: "xl/_rels/workbook.xml.rels", data: enc(buildWorkbookRels(cellsJson.sheets)) },
     { name: "xl/sharedStrings.xml", data: enc(buildSharedStringsXml(sharedStrings)) },
     ...worksheetXmls.map((w) => ({ name: w.name, data: enc(w.xml) })),
+    ...drawingFiles,
     { name: "xl/vbaProject.bin", data: vbaBin },
   ];
 
@@ -392,7 +492,8 @@ function buildFixture(fixtureName: string, srcDir: string, outDir: string): void
 function main(): void {
   const repoRoot = path.resolve(import.meta.dirname, "../..");
   const srcRoot = path.join(repoRoot, "fixtures", "src");
-  const buildDir = path.join(repoRoot, "fixtures", "build");
+  // FIXTURES_OUT_DIR lets a test build into a temporary directory instead of fixtures/build.
+  const buildDir = process.env.FIXTURES_OUT_DIR ?? path.join(repoRoot, "fixtures", "build");
 
   fs.mkdirSync(buildDir, { recursive: true });
 

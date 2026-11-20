@@ -1,5 +1,5 @@
 import { formatBytes } from "../model/format";
-import type { Exhumed, ExhumedModule, MacroInfo, RunView } from "../model/types";
+import type { ButtonInfo, Exhumed, ExhumedModule, MacroInfo, RunView } from "../model/types";
 import { useStore } from "../state/context";
 import type { RunState } from "../state/types";
 import { DropZone } from "./DropZone";
@@ -81,7 +81,7 @@ export function NoVbaNotice(props: { exhumed: Exhumed }) {
   );
 }
 
-export function predictionText(m: MacroInfo): string {
+export function predictionText(m: Pick<MacroInfo, "prediction">): string {
   const { status, hits } = m.prediction;
   if (status === "fully") return "Predicted: fully resurrected";
   const n = hits.length;
@@ -142,6 +142,74 @@ export function MacroList(props: { exhumed: Exhumed; run: RunState }) {
   );
 }
 
+function buttonWhere(b: ButtonInfo): string {
+  return b.anchor ? `${b.sheet}, ${b.anchor}` : b.sheet;
+}
+
+/** Buttons and macro-bound shapes found on the sheets (BTN-05). Running one is the same run as running its macro. */
+export function ButtonList(props: { exhumed: Exhumed; run: RunState }) {
+  const { actions } = useStore();
+  const { exhumed, run } = props;
+  const { buttons, buttonProblems } = exhumed;
+  if (buttons.length === 0 && buttonProblems.length === 0) return null;
+  const running = run.status === "running";
+  const captionCount = new Map<string, number>();
+  for (const b of buttons) captionCount.set(b.caption, (captionCount.get(b.caption) ?? 0) + 1);
+  return (
+    <div>
+      <h3>Buttons on sheets</h3>
+      {buttons.length > 0 ? (
+        <ul class="plain-list macro-list" aria-busy={running}>
+          {buttons.map((b, i) => {
+            const macroId = b.macroId;
+            const done =
+              macroId !== null && run.status === "done" && run.macroId === macroId
+                ? run.view
+                : null;
+            const duplicate = (captionCount.get(b.caption) ?? 0) > 1;
+            const label = `Run button ${b.caption}${duplicate ? ` on ${buttonWhere(b).replace(", ", " ")}` : ""}`;
+            return (
+              <li key={`${i}:${b.sheet}:${b.anchor ?? ""}:${b.caption}`} class="macro">
+                <div class="macro-head">
+                  <span class="name">{b.caption}</span>
+                  {macroId !== null ? (
+                    <button
+                      type="button"
+                      class="button button--primary"
+                      aria-label={label}
+                      disabled={running}
+                      onClick={() => void actions.runMacro(macroId)}
+                    >
+                      Run
+                    </button>
+                  ) : null}
+                </div>
+                {macroId !== null ? (
+                  <p class="muted">
+                    {buttonWhere(b)}. Calls {macroId}.
+                  </p>
+                ) : (
+                  <p class="muted">{buttonWhere(b)}.</p>
+                )}
+                {b.prediction ? (
+                  <p class="muted">{predictionText({ prediction: b.prediction })}</p>
+                ) : null}
+                {b.note ? <p class="muted">{b.note}</p> : null}
+                {done ? <p class="actual">Result: {statusText(done)}</p> : null}
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+      {buttonProblems.map((p) => (
+        <p key={p} class="muted">
+          {p}
+        </p>
+      ))}
+    </div>
+  );
+}
+
 export function ExhumePanel() {
   const { state } = useStore();
   const { exhumed, run } = state;
@@ -156,6 +224,7 @@ export function ExhumePanel() {
       <SheetList exhumed={exhumed} open={open} />
       <ModuleList exhumed={exhumed} open={open} />
       <NoVbaNotice exhumed={exhumed} />
+      <ButtonList exhumed={exhumed} run={run} />
       <MacroList exhumed={exhumed} run={run} />
     </section>
   );

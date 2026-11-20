@@ -69,6 +69,30 @@ Run `BuildActs`, download, open the `.xlsx`. The sheet "Акты" has the 20 cat
 
 Result: (pass or fail, date, application and version, note)
 
+## Buttons on sheets
+
+Load `Try the demo`. In the Exhume panel the heading "Buttons on sheets" comes before "Macros", with the button "Build invoice", "Log, H2. Calls Module1.BuildInvoice." and the prediction. Tab to "Run button Build invoice" and press Enter: the same result as "Run Module1.BuildInvoice". Load the Russian sample: "Сформировать акты" on Журнал, H2.
+
+Result: (pass or fail, date, browser, note)
+
+## Button mark in the grid
+
+In the grid, cell H2 of the sheet Log shows the caption "Build invoice" as a small label after the cell value. It does not cover the value, it is not a tab stop, and a screen reader reads the cell without it. Switch to another sheet: no label.
+
+Result: (pass or fail, date, browser, note)
+
+## Keyboard across a button mark
+
+Click the cell G2, then press Right, Right, Left, Home, End, Page Down, Page Up. Focus moves cell by cell exactly as in a row without a label, and passes over H2 without stopping on the label.
+
+Result: (pass or fail, date, browser, note)
+
+## Built button in desktop Excel
+
+Open `fixtures/build/demo_invoice.xlsm` in desktop Excel and click the button. The macro `Module1.BuildInvoice` should run (macros enabled). The builder writes the button as VML with the same elements Excel writes, but this has not been checked in Excel: not verified in Excel yet.
+
+Result: not verified in Excel yet (pass or fail, date, Excel version, note)
+
 ## Measured numbers
 
 Measured on the machine that built the UI (an Apple silicon Mac, Node, jsdom, the tests in `app/tests/perf.test.ts` and `app/tests/ui/perf-render.test.tsx`). Run them again on the machine you care about and write the numbers here.
@@ -76,7 +100,7 @@ Measured on the machine that built the UI (an Apple silicon Mac, Node, jsdom, th
 | Case | Budget | Measured |
 |---|---|---|
 | 40 rows (`demo_acts.xlsm`): exhume | part of 100 ms | about 1 ms with the file already read, 3 ms with the ZIP and VBA read |
-| 40 rows: run `BuildActs` | part of 100 ms | 95 to 150 ms. About 90 ms is the `Range.End(xlUp)` scan from row 1 048 576 inside `packages/workbook`. **Budget not met**, see `BACKLOG.md` item 8. |
+| 40 rows: exhume + run `BuildActs` | 100 ms (median of 5) | medians of five runs of the test: 2.4, 2.3, 2.4, 2.5, 2.3 ms. `Range.End` now jumps to the last row from tracked bounds (sheet-buttons STASK-01). Budget met. |
 | 5 000 rows: exhume, run, derive changes | 2 000 ms | about 280 ms (exhume 43, run 232, derive 1); 30 106 trace events |
 | 5 000 rows: draw the page | at most 400 cell nodes, 100 trace rows | 216 cell nodes, 14 trace rows |
 | Select the 10 000th trace event | one reducer call | 0.04 ms, 1 indexed read of the trace |

@@ -1,6 +1,7 @@
 import { extractModules, NoVBAProjectError } from "@vba-necromancer/ovba";
 import { ParseError, parse, scanUnsupported, tokenize } from "@vba-necromancer/vba";
-import { openWorkbook } from "@vba-necromancer/workbook";
+import { openWorkbook, readButtons } from "@vba-necromancer/workbook";
+import { resolveButtons } from "./buttons";
 import { countProcedures, listMacros } from "./macros";
 import { predictMacro } from "./predict";
 import { NotAWorkbookError, WorkbookReadError, checkSize, sniffKind } from "./sniff";
@@ -61,6 +62,12 @@ export function exhumeParts(
   const asts = modules.flatMap((m) => (m.ast ? [m.ast] : []));
   const staticUnsupported = scanUnsupported(asts);
 
+  const macros = listMacros(modules).map((m) => ({
+    ...m,
+    prediction: predictMacro(m, modules, staticUnsupported),
+  }));
+  const found = readButtons(bytes);
+
   return {
     fileName: name,
     size: bytes.length,
@@ -70,10 +77,9 @@ export function exhumeParts(
     sheets,
     modules,
     procedureCount: countProcedures(modules),
-    macros: listMacros(modules).map((m) => ({
-      ...m,
-      prediction: predictMacro(m, modules, staticUnsupported),
-    })),
+    macros,
+    buttons: resolveButtons(found.buttons, macros, name),
+    buttonProblems: found.problems,
     staticUnsupported,
     vba: options.vba ?? (sources.length > 0 ? "present" : "none"),
     vbaError: options.vbaError ?? null,

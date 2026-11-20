@@ -1,5 +1,5 @@
 import type { ModuleAST, RunResult, UnsupportedHit } from "@vba-necromancer/vba";
-import type { SaveableWorkbook, VBAValue } from "@vba-necromancer/workbook";
+import type { RawButton, SaveableWorkbook, VBAValue } from "@vba-necromancer/workbook";
 import type { ModuleType } from "@vba-necromancer/ovba";
 
 export type VbaState = "present" | "none" | "unreadable-xls";
@@ -32,6 +32,16 @@ export interface MacroInfo {
   prediction: { status: "fully" | "partly"; hits: UnsupportedHit[] };
 }
 
+/** A button or macro-bound shape found on a sheet, resolved against the macro list (BTN-03). */
+export interface ButtonInfo extends RawButton {
+  /** `Module1.BuildActs` when the reference resolves to a macro of this workbook. */
+  macroId: string | null;
+  /** Why the button has no Run action; null when it resolved. */
+  note: string | null;
+  /** The same object as the macro's prediction; null when unresolved. */
+  prediction: MacroInfo["prediction"] | null;
+}
+
 export interface Exhumed {
   fileName: string;
   size: number;
@@ -45,6 +55,10 @@ export interface Exhumed {
   /** Subs and Functions in modules that parsed. */
   procedureCount: number;
   macros: MacroInfo[];
+  /** Buttons and macro-bound shapes on the sheets, in sheet order. Empty for a workbook without drawings. */
+  buttons: ButtonInfo[];
+  /** One line per drawing part that could not be read. */
+  buttonProblems: string[];
   staticUnsupported: UnsupportedHit[];
   vba: VbaState;
   /** Why the VBA project could not be read, when it is present but broken. */

@@ -1,5 +1,9 @@
 import type { SheetHandle } from "@vba-necromancer/workbook";
+import { useMemo } from "preact/hooks";
+import { cellKey } from "../model/changes";
+import { parseCellRef } from "../model/format";
 import { useStore } from "../state/context";
+import type { ButtonInfo } from "../model/types";
 import { Grid } from "./Grid";
 import { Tabs } from "./Tabs";
 import { useIsWide } from "./useMediaQuery";
@@ -43,10 +47,30 @@ export function SheetTabs() {
   );
 }
 
+/** Captions of the buttons anchored on one sheet, by cell key (BTN-06). */
+export function buttonMarks(buttons: ButtonInfo[], sheet: string): Map<number, string> {
+  const marks = new Map<number, string>();
+  for (const b of buttons) {
+    if (b.sheet !== sheet || b.anchor === null) continue;
+    const pos = parseCellRef(b.anchor);
+    if (!pos) continue;
+    const key = cellKey(pos.row, pos.col);
+    const existing = marks.get(key);
+    marks.set(key, existing === undefined ? b.caption : `${existing} / ${b.caption}`);
+  }
+  return marks;
+}
+
 function GridPanel() {
   const { state, dispatch } = useStore();
   const wide = useIsWide();
   const { exhumed, run, view, selection } = state;
+  const sheetName = exhumed ? (view.sheet ?? exhumed.sheets[0]?.name) : undefined;
+  const marks = useMemo(
+    () =>
+      exhumed && sheetName !== undefined ? buttonMarks(exhumed.buttons, sheetName) : undefined,
+    [exhumed, sheetName],
+  );
   if (!exhumed) return null;
   // Before a run the sheets as loaded; after a run the workbook the macro ran on.
   const workbook = run.status === "done" ? run.view.workbook : exhumed.initial;
@@ -73,6 +97,7 @@ function GridPanel() {
         sheet={sheet}
         changes={changes}
         selected={selected}
+        marks={marks}
         rowHeight={wide ? 24 : 32}
         onSelectCell={(row, col) => dispatch({ type: "select-cell", sheet: name, row, col })}
       />

@@ -69,7 +69,7 @@ function median(xs: number[]): number {
   return s[Math.floor(s.length / 2)];
 }
 
-describe("40 rows (the real demo_acts.xlsm)", () => {
+describe("40 rows (the real demo_acts.xlsm, END-03)", () => {
   const bytes = fixtureBytes("demo_acts");
   const measure = (): { median: number; times: number[] } => {
     const once = (): number => {
@@ -83,17 +83,13 @@ describe("40 rows (the real demo_acts.xlsm)", () => {
     return { median: median(times), times };
   };
 
-  // The budget of UI-12.1 is 100 ms. It is NOT met today: about 90 ms of the run is
-  // `Range.End(xlUp)` starting at row 1 048 576, which walks a million empty cells inside
-  // packages/workbook (BACKLOG.md item 8). This spec may not change packages/*, and the
-  // budget is not to be raised, so the budget test stays here, skipped, until that item lands.
-  it.skip("exhume + resurrect takes under 100 ms (median of 5 after a warm-up)", () => {
+  it("exhume + resurrect takes under 100 ms (median of 5 after a warm-up)", () => {
     expect(measure().median).toBeLessThan(100);
   });
 
   it("prints the measured time and guards against it getting much worse (regression guard, not the budget)", () => {
     const { median: m, times } = measure();
-    console.log(`perf 40 rows: exhume + resurrect median ${m.toFixed(1)} ms (${times.map((t) => t.toFixed(1)).join(", ")}); budget 100 ms, see BACKLOG.md item 8`);
+    console.log(`perf 40 rows: exhume + resurrect median ${m.toFixed(1)} ms (${times.map((t) => t.toFixed(1)).join(", ")}); budget 100 ms`);
     // The fastest run, not the median: other test files (a full vite build, a typecheck) share the CPU.
     expect(Math.min(...times)).toBeLessThan(400);
   });

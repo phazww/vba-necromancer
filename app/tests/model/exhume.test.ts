@@ -86,3 +86,57 @@ describe("exhumeParts", () => {
     expect(good?.lines.length).toBeGreaterThan(0);
   });
 });
+
+describe("exhume: buttons (BTN-03, BTN-07, BTN-08)", () => {
+  it("demo_invoice.xlsm gives exactly one resolved button", () => {
+    const e = exhume("demo_invoice.xlsm", fixtureBytes("demo_invoice"));
+    expect(e.buttonProblems).toEqual([]);
+    expect(e.buttons).toHaveLength(1);
+    expect(e.buttons[0]).toMatchObject({
+      sheet: "Log",
+      caption: "Build invoice",
+      anchor: "H2",
+      macroId: "Module1.BuildInvoice",
+      note: null,
+    });
+    expect(e.buttons[0].prediction).toBe(e.macros.find((m) => m.id === "Module1.BuildInvoice")?.prediction);
+  });
+
+  it("demo_acts.xlsm gives exactly one resolved button", () => {
+    const e = exhume("demo_acts.xlsm", fixtureBytes("demo_acts"));
+    expect(e.buttons).toHaveLength(1);
+    expect(e.buttons[0]).toMatchObject({
+      sheet: "Журнал",
+      caption: "Сформировать акты",
+      anchor: "H2",
+      macroId: "Module1.BuildActs",
+    });
+  });
+
+  it("labour_statement.xlsm and the other fixtures have no buttons", () => {
+    for (const name of FIXTURE_NAMES.filter((n) => n !== "demo_acts" && n !== "demo_invoice")) {
+      const e = exhume(`${name}.xlsm`, fixtureBytes(name));
+      expect(e.buttons, name).toEqual([]);
+      expect(e.buttonProblems, name).toEqual([]);
+    }
+  });
+
+  it("a plain .xlsx gives no buttons and no problems", () => {
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([[1, 2]]), "S");
+    const bytes = new Uint8Array(XLSX.write(wb, { type: "array", bookType: "xlsx" }) as ArrayBuffer);
+    const e = exhume("plain.xlsx", bytes);
+    expect(e.buttons).toEqual([]);
+    expect(e.buttonProblems).toEqual([]);
+  });
+
+  it("a .xls (compound file) gives no buttons and does not throw", () => {
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([[1, 2]]), "S");
+    const bytes = new Uint8Array(XLSX.write(wb, { type: "array", bookType: "biff8" }) as ArrayBuffer);
+    expect(sniffKind(bytes)).toBe("cfb");
+    const e = exhume("old.xls", bytes);
+    expect(e.buttons).toEqual([]);
+    expect(e.buttonProblems).toEqual([]);
+  });
+});

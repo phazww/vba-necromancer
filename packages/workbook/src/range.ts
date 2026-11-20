@@ -16,7 +16,8 @@ export function colNumber(letters: string): number {
 
 export function colLetters(col: number): string {
   let s = "";
-  for (let n = col; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + ((n - 1) % 26)) + s;
+  for (let n = col; n > 0; n = Math.floor((n - 1) / 26))
+    s = String.fromCharCode(65 + ((n - 1) % 26)) + s;
   return s;
 }
 
@@ -25,12 +26,18 @@ function parseCell(ref: string): CellPos {
   if (!m) throw new Error(`Bad cell reference: ${ref}`);
   const row = Number(m[2]);
   const col = colNumber(m[1]);
-  if (row < 1 || row > MAX_ROWS || col < 1 || col > MAX_COLS) throw new Error(`Cell reference out of range: ${ref}`);
+  if (row < 1 || row > MAX_ROWS || col < 1 || col > MAX_COLS)
+    throw new Error(`Cell reference out of range: ${ref}`);
   return { row, col };
 }
 
 /** Parses "A1" or "A1:B2" (optionally with $) into normalised corners. Throws on anything else. */
-export function parseRef(ref: string): { top: number; left: number; bottom: number; right: number } {
+export function parseRef(ref: string): {
+  top: number;
+  left: number;
+  bottom: number;
+  right: number;
+} {
   const parts = ref.split(":");
   if (parts.length > 2) throw new Error(`Bad range reference: ${ref}`);
   const first = parseCell(parts[0]);
@@ -46,6 +53,10 @@ export function parseRef(ref: string): { top: number; left: number; bottom: numb
 /** Cell access a range needs from its sheet. */
 export interface RangeSheet extends SheetHandle {
   getRange(ref: string): RangeHandle;
+  /** Upper bound of the row of any cell that exists; 0 when the sheet has no cell. */
+  lastRowBound?(): number;
+  /** Upper bound of the column of any cell that exists; 0 when the sheet has no cell. */
+  lastColBound?(): number;
 }
 
 export class SheetRange implements RangeHandle {
@@ -89,7 +100,8 @@ export class SheetRange implements RangeHandle {
     const dc = direction === "xlLeft" ? -1 : direction === "xlRight" ? 1 : 0;
     let r = this.topRow;
     let c = this.leftCol;
-    const inside = (rr: number, cc: number): boolean => rr >= 1 && rr <= MAX_ROWS && cc >= 1 && cc <= MAX_COLS;
+    const inside = (rr: number, cc: number): boolean =>
+      rr >= 1 && rr <= MAX_ROWS && cc >= 1 && cc <= MAX_COLS;
     const filled = (rr: number, cc: number): boolean => this.sheet.getCellValue(rr, cc) !== null;
     if (inside(r + dr, c + dc)) {
       if (filled(r, c) && filled(r + dr, c + dc)) {
@@ -100,7 +112,25 @@ export class SheetRange implements RangeHandle {
       } else {
         r += dr;
         c += dc;
+        const bound = dr !== 0 ? this.sheet.lastRowBound?.() : this.sheet.lastColBound?.();
         while (inside(r, c) && !filled(r, c)) {
+          if (bound !== undefined) {
+            // Everything beyond the bound is empty, so these jumps skip only cells the walk would step over.
+            const pos = dr !== 0 ? r : c;
+            const edge = dr !== 0 ? MAX_ROWS : MAX_COLS;
+            if (dr < 0 || dc < 0) {
+              const target = Math.max(bound, 1);
+              if (pos > target) {
+                if (dr !== 0) r = target;
+                else c = target;
+                continue;
+              }
+            } else if (pos >= bound) {
+              if (dr !== 0) r = edge;
+              else c = edge;
+              break;
+            }
+          }
           if (!inside(r + dr, c + dc)) break;
           r += dr;
           c += dc;

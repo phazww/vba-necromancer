@@ -153,3 +153,12 @@ Open items for a person: the manual checks in `docs/ui-checklist.md`, the first 
 - `21c2952`: an English twin of the demo workbook (`demo_invoice`) as the default demo, so the result reads without knowing Russian. Its expected results were recomputed in plain Python from its own input cells and checked against `demo_acts.json` number for number; `olevba` reads it like the others. The Russian workbook stays as the code page 1251 sample.
 
 Current state: eight fixture workbooks match their hand-written oracles, all eight are read identically by `olevba`, 655 tests pass.
+
+---
+
+## The sheet-buttons spec
+
+`.kiro/specs/sheet-buttons/` (requirements in EARS form BTN-01..08 and END-01..03, a design and thirteen tasks) was implemented task by task, with `npm test`, `npm run lint`, `npm run typecheck` and `npm run build -w app` run after each one before the task was marked done. Writing the tasks as a strict order (bounds for `Range.End`, then the XML scanner, then each reader, then the fixture builder, then the UI) meant every task could be checked on its own. The spec caught several things that a looser request would have missed: it required that fixtures without buttons keep the same `xl/` parts and that building twice gives identical bytes, and that check showed `fflate` stamps the current time into every ZIP entry, so each rebuild changed every `.xlsm`; the builder now passes a fixed modification time, and the six fixtures without buttons were left as committed. It also required that a corrupt drawing part is reported by name and does not hide the other drawings, which meant inflating each drawing in its own `try` instead of one `unzipSync` for all parts. The result of the `Range.End` work is in `docs/ui-checklist.md` (40-row exhume + run: medians of 2.3 to 2.5 ms against the 100 ms budget).
+
+Review after the sheet-buttons run (developer with Claude Code, 20 Nov): the requirements were written by the developer, design and tasks by Kiro. Checked independently: `fixtures/expected` and the MS-OVBA known-answer test were not touched; all 759 tests, lint, typecheck and build pass; olevba still reads all eight fixtures identically; LibreOffice (an independent reader) opens the rebuilt `demo_invoice.xlsm` and shows a "Build invoice" push button anchored on sheet Log. LibreOffice does not show which macro the button calls, so the macro link itself is checked only by our own reader, and the file has still not been opened in desktop Excel.
+

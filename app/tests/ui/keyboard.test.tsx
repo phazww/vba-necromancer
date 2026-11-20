@@ -3,7 +3,11 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fireEvent, render, screen, within } from "@testing-library/preact";
 import axe from "axe-core";
+import * as XLSX from "xlsx";
+import { openWorkbook } from "@vba-necromancer/workbook";
 import { App } from "../../src/App";
+import { cellKey } from "../../src/model/changes";
+import { Grid } from "../../src/ui/Grid";
 import { exhume } from "../../src/model/exhume";
 import { resurrect } from "../../src/model/resurrect";
 import { initialState, reduce } from "../../src/state/reducer";
@@ -156,5 +160,60 @@ describe("docs/ui-checklist.md", () => {
     const next = text.indexOf("\n## ", i + 1);
     const section = text.slice(i, next === -1 ? undefined : next);
     expect(section).toMatch(/Result:/);
+  });
+});
+
+describe("grid keyboard across a button mark (BTN-06)", () => {
+  const sheet = () => {
+    const rows = Array.from({ length: 60 }, (_, r) =>
+      Array.from({ length: 6 }, (_, c) => r * 10 + c),
+    );
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), "Data");
+    const bytes = new Uint8Array(
+      XLSX.write(wb, { type: "array", bookType: "xlsx" }) as ArrayBuffer,
+    );
+    return openWorkbook(bytes).getSheet("Data");
+  };
+  const KEYS = [
+    "ArrowDown",
+    "ArrowRight",
+    "ArrowRight",
+    "ArrowLeft",
+    "ArrowUp",
+    "End",
+    "Home",
+    "PageDown",
+    "PageDown",
+    "PageUp",
+  ];
+
+  function walk(marks?: Map<number, string>): number[][] {
+    const { container, unmount } = render(
+      <Grid sheet={sheet()} selected={null} marks={marks} onSelectCell={() => {}} />,
+    );
+    const first = container.querySelector<HTMLElement>(
+      '[data-row="1"][data-col="1"]',
+    ) as HTMLElement;
+    first.focus();
+    const visited: number[][] = [];
+    for (const key of KEYS) {
+      fireEvent.keyDown(document.activeElement as Element, { key });
+      const el = document.activeElement as HTMLElement;
+      visited.push([Number(el.dataset.row), Number(el.dataset.col)]);
+    }
+    unmount();
+    return visited;
+  }
+
+  it("arrow keys, Home, End, PageUp and PageDown move exactly as without marks", () => {
+    // Marks on cells the walk passes through: B2, C2, A1 and the last column of row 2.
+    const marks = new Map([
+      [cellKey(2, 2), "Mark"],
+      [cellKey(2, 3), "Mark"],
+      [cellKey(1, 1), "Mark"],
+      [cellKey(2, 6), "Mark"],
+    ]);
+    expect(walk(marks)).toEqual(walk());
   });
 });

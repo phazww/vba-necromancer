@@ -33,6 +33,8 @@ export interface GridProps {
   changes?: ReadonlyMap<number, { before: VBAValue }>;
   /** The cell to mark as selected (from the trace), if it is on this sheet. */
   selected: { row: number; col: number } | null;
+  /** Captions of buttons anchored on this sheet, by `cellKey`. Drawn after the value; not interactive. */
+  marks?: ReadonlyMap<number, string>;
   rowHeight?: number;
   onSelectCell(row: number, col: number): void;
 }
@@ -42,7 +44,7 @@ function visibleText(text: string): string {
 }
 
 export function Grid(props: GridProps) {
-  const { sheet, changes, selected, onSelectCell } = props;
+  const { sheet, changes, selected, marks, onSelectCell } = props;
   const rowHeight = props.rowHeight ?? 24;
   const size = useMemo(() => gridSize(sheet), [sheet]);
   const container = useRef<HTMLDivElement>(null);
@@ -157,6 +159,7 @@ export function Grid(props: GridProps) {
       const isSelected = selected !== null && selected.row === r && selected.col === c;
       const isActive = active.row === r && active.col === c;
       const truncated = text.length > MAX_VISIBLE_CHARS;
+      const mark = marks?.get(cellKey(r, c));
       const label = changed
         ? `${text === "" ? "empty" : text}, changed, was ${formatValue(changed.before) === "" ? "empty" : formatValue(changed.before)}`
         : truncated
@@ -166,7 +169,7 @@ export function Grid(props: GridProps) {
         <div
           key={c}
           role="gridcell"
-          class={`cell${changed ? " cell--changed" : ""}${isSelected ? " cell--selected" : ""}${typeof value === "number" ? " cell--number" : ""}`}
+          class={`cell${changed ? " cell--changed" : ""}${isSelected ? " cell--selected" : ""}${typeof value === "number" ? " cell--number" : ""}${mark !== undefined ? " cell--marked" : ""}`}
           style={{ left: `${HEADER_WIDTH + (c - 1) * COL_WIDTH}px`, width: `${COL_WIDTH}px`, height: `${rowHeight}px` }}
           aria-colindex={c + 1}
           aria-selected={isSelected}
@@ -186,7 +189,16 @@ export function Grid(props: GridProps) {
               fx
             </span>
           ) : null}
-          {visibleText(text)}
+          {mark !== undefined ? (
+            <>
+              <span class="cell-value">{visibleText(text)}</span>
+              <span class="grid-mark" aria-hidden="true">
+                {mark}
+              </span>
+            </>
+          ) : (
+            visibleText(text)
+          )}
         </div>,
       );
     }

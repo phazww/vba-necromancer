@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import fc from "fast-check";
-import { address, colLetters, formatValue, qualified } from "../../src/model/format";
+import { address, colLetters, formatValue, parseCellRef, qualified } from "../../src/model/format";
 import { visibleRange } from "../../src/ui/useWindow";
 
 describe("formatValue", () => {
@@ -78,5 +78,31 @@ describe("visibleRange", () => {
     const { start, end } = visibleRange(2400, 480, 24, 5000, 4);
     expect(start).toBeLessThanOrEqual(100);
     expect(end).toBeGreaterThan(100);
+  });
+});
+
+describe("parseCellRef", () => {
+  it("reads plain and absolute references", () => {
+    expect(parseCellRef("A1")).toEqual({ row: 1, col: 1 });
+    expect(parseCellRef("H2")).toEqual({ row: 2, col: 8 });
+    expect(parseCellRef("AA10")).toEqual({ row: 10, col: 27 });
+    expect(parseCellRef("$B$3")).toEqual({ row: 3, col: 2 });
+    expect(parseCellRef("xfd1048576")).toEqual({ row: 1048576, col: 16384 });
+  });
+  it("gives null for anything else", () => {
+    for (const bad of ["", "H", "2", "A0", "A1:B2", "XFE1", "A1048577", "Sheet1!A1", "A-1"]) {
+      expect(parseCellRef(bad), bad).toBeNull();
+    }
+  });
+  it("is the inverse of address", () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 1, max: 1048576 }),
+        fc.integer({ min: 1, max: 16384 }),
+        (row, col) => {
+          expect(parseCellRef(address(row, col))).toEqual({ row, col });
+        },
+      ),
+    );
   });
 });

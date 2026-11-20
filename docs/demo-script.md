@@ -6,8 +6,8 @@ Recorded on a Mac in Chrome, to prove the point: no Windows, no Excel. Voice-ove
 |---|---|---|
 | 0:00–0:15 | An old workbook (the built-in English demo, `demo_invoice.xlsm`) opened in Google Sheets: the button does nothing, a warning that macros are not supported. | "Millions of business workbooks still run on VBA macros. Open one in the browser, on a Mac or in Google Sheets, and the macros are dead." |
 | 0:15–0:30 | The VBA Necromancer page. Drag the same file onto the drop zone ("Exhume"). | "VBA Necromancer brings them back. Everything runs locally in the browser, nothing is uploaded." |
-| 0:30–0:50 | The app lists sheets, modules and macros, and the `Module1.BuildInvoice` macro with its prediction. | "It reads the VBA project straight from the file: the compressed module streams, the code page, which button calls which macro." |
-| 0:50–1:20 | Click the button. The Invoice sheet fills in. Totals appear. Side by side: the same numbers from Excel on Windows (screenshot taken earlier). | "The macro runs again, in an interpreter we wrote in TypeScript. Every number matches a hand-checked expected result." |
+| 0:30–0:50 | The app lists sheets, modules and, under "Buttons on sheets", the button "Build invoice" (Log, H2, calls `Module1.BuildInvoice`) with its prediction. The same caption is marked in cell H2 of the grid. | "It reads the VBA project straight from the file: the compressed module streams, the code page, which button calls which macro." |
+| 0:50–1:20 | Click Run on the button ("Run button Build invoice"). The Invoice sheet fills in. Totals appear. Side by side: the same numbers from Excel on Windows (screenshot taken earlier). | "The macro runs again, in an interpreter we wrote in TypeScript. Every number matches a hand-checked expected result." |
 | 1:20–1:45 | Open the trace: each cell read and written, before and after values; click a row to jump to the VBA line. | "Every run leaves a trace: what the macro read, what it wrote, and from which line." |
 | 1:40–1:45 | Click "Try a Russian workbook": the same job with Cyrillic sheet names and code, read from code page 1251. | "Real workbooks are not all in English. The code page comes from the file." |
 | 1:45–2:05 | Drop the graveyard workbook. Status «partly resurrected», the graveyard lists Declare, CreateObject, Open with line numbers. | "And it is honest. Anything it cannot run yet goes to the graveyard, with module and line, instead of being silently skipped." |
@@ -20,6 +20,6 @@ Recorded on a Mac in Chrome, to prove the point: no Windows, no Excel. Voice-ove
 - The test link is public and loads in under 3 seconds.
 
 ## Known gap against this script
-- **0:30 to 0:50, "the button found on the sheet".** The UI does not read shapes or form-control buttons yet (`BACKLOG.md` item 2; out of scope for the `resurrection-ui` spec). What the app shows instead is the macro list in the Exhume panel: `Module1.BuildActs` with "Predicted: fully resurrected" and a Run button. Either record that screen and change the voice-over to say the macros are listed from the VBA project, or do not record this row until button reading exists. The voice-over above has not been changed.
+- **0:30 to 0:50, "the button found on the sheet".** Met since sheet-buttons: the app reads the Form Control button from `demo_invoice.xlsm` and shows it in the Exhume panel and as a mark in H2 of the grid. The button in the built fixture is written by our own builder; it has not been opened in desktop Excel yet (see `docs/ui-checklist.md`).
 - **0:50 to 1:20, "totals appear".** The run itself is real. The comparison with Excel on Windows is still a screenshot made outside the app.
 

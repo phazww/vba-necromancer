@@ -17,6 +17,16 @@ export function address(row: number, col: number): string {
   return `${colLetters(col)}${row}`;
 }
 
+/** "H2" or "$B$3" -> { row, col }; null when it is not a cell reference inside the sheet. */
+export function parseCellRef(ref: string): { row: number; col: number } | null {
+  const m = /^\$?([A-Za-z]{1,3})\$?([1-9]\d*)$/.exec(ref.trim());
+  if (!m) return null;
+  let col = 0;
+  for (const ch of m[1].toUpperCase()) col = col * 26 + (ch.charCodeAt(0) - 64);
+  const row = Number(m[2]);
+  return row <= 1_048_576 && col <= 16_384 ? { row, col } : null;
+}
+
 const PLAIN_SHEET_NAME = /^[\p{L}_][\p{L}\p{N}_.]*$/u;
 const LOOKS_LIKE_REF = /^([A-Za-z]{1,3}\d+|[Rr]\d*[Cc]\d*|[Rr]|[Cc])$/;
 

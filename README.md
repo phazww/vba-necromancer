@@ -4,7 +4,7 @@
 
 Kiroween 2026 entry, category **Resurrection**. Built spec-first with [Kiro](https://kiro.dev).
 
-> Status: the file layer, the interpreter and the browser UI work end to end on the fixture workbooks. This README says what works today, not what is planned. Live demo: **https://phazww.github.io/vba-necromancer/** (click "Try the demo", then Run).
+> Status: the file layer, the interpreter and the browser UI work end to end on the fixture workbooks. This README says what works today, not what is planned. Live demo: **https://phazww.github.io/vba-necromancer/** (click "Try the demo", then Run). Demo video (2 min): https://youtu.be/Hqbf-bfTuKg
 
 ## Why
 

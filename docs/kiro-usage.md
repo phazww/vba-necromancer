@@ -29,8 +29,12 @@ the hand-written oracles in `fixtures/expected/` and `spec-examples.test.ts` com
 | TASK-02..04 | `d36580f` | CFB/OLE2 parser, MS-OVBA decompressor, `dir` stream parser, module extraction |
 | TASK-05..06 | `fc00662` | VBA lexer (property-tested, never throws), recursive-descent parser, unsupported statements become AST nodes with line numbers |
 | TASK-07 | `8077d07` | Numeric semantics: `coerce.ts` with banker's rounding, integer overflow (`RuntimeError(6)`), integer division, `Mod`, Date epoch |
+| TASK-08 | `02ef5e3` | Tree-walking interpreter: typed Integer/Long arithmetic, `Err` object, `On Error`, built-ins |
+| TASK-10..15 | `514902c` | SheetJS workbook adapter, execution trace, unsupported-construct reporting with a static scan, `WorksheetFunction`, end-to-end fixture tests |
+| DTASK-01..09 | `df9bebe` | `Scripting.Dictionary` shim (spec `scripting-dictionary`: design and tasks by Kiro, requirements by the developer) |
+| UTASK-01..24 | `e012744` | Browser UI (spec `resurrection-ui`), see below |
 
-TASK-08 and later were not yet committed as of the latest `git log` entry.
+TASK-09 (fixture builder) was started by Kiro and finished by hand, see "Review findings" below.
 
 ---
 
@@ -111,13 +115,13 @@ Kiro implemented TASK-09 (fixture builder) until the monthly free-tier limit sto
 4. **Chunk size semantics.** `CompressedChunkSize` counts the whole chunk including its 2-byte header (MS-OVBA 2.4.1.1.5); both compressor and decompressor had it as data-only, which only works for a single last chunk (as in the 3.2.2 example). Raw chunks now use header 0x3FFF, and the decompressor validates the 0b011 signature.
 5. **dir stream.** The parser treated PROJECTVERSION (0x0009) as a normal `Id|Size|Data` record (it is `Id|Reserved=4|Major(4)|Minor(2)`) and expected a non-standard PROJECTMODULES layout, so it would have failed on every real Excel file. Rewritten per MS-OVBA 2.3.4.2 with a single record walk; a matching `writeDirStream` builds fixtures. Module names are decoded with the project code page.
 
-Result: all six fixture workbooks are read by `olevba` with sources identical to `fixtures/src/*/Module1.bas`, including Cyrillic text in code page 1251.
+Result: all six fixture workbooks of that day (eight today) are read by `olevba` with sources identical to `fixtures/src/*/Module1.bas`, including Cyrillic text in code page 1251.
 
 ---
 
 ## Spec session — `resurrection-ui`
 
-`.kiro/specs/resurrection-ui/` holds `requirements.md` (UI-1 to UI-13), `design.md` (Preact, one reducer, a pure model layer, windowed grid and lists, CSP, token table with contrast ratios) and `tasks.md` (UTASK-01 to UTASK-24). The workspace steering files (`product`, `structure`, `tech`) apply. No commit exists for this spec or its implementation yet: `git log` ends at `df9bebe`, so the table below lists tasks, not commits.
+`.kiro/specs/resurrection-ui/` holds `requirements.md` (UI-1 to UI-13), `design.md` (Preact, one reducer, a pure model layer, windowed grid and lists, CSP, token table with contrast ratios) and `tasks.md` (UTASK-01 to UTASK-24). The workspace steering files (`product`, `structure`, `tech`) apply. Spec and implementation were committed together as `e012744`.
 
 Kiro implemented UTASK-01 to UTASK-24 in order in one non-interactive session, running `npm test`, `npm run lint`, `npm run typecheck` and the app build after each task before marking it done in `tasks.md`. `packages/*`, `fixtures/expected/*.json` and the `.gitignore` entries for `.agy-bridge` and `HANDOFF_CONTEXT.md` were not edited.
 
@@ -141,3 +145,11 @@ Things found on the way, in the order they came up:
 
 Open items for a person: the manual checks in `docs/ui-checklist.md`, the first deploy and the live demo link in the README, and the `git commit`.
 
+---
+
+## After the Kiro specs (developer with Claude Code)
+
+- `e700bfc`: visual polish of the UI (first screen with a preview of the demo result, quieter panels, wider grid columns, mobile layout), MIT license.
+- `21c2952`: an English twin of the demo workbook (`demo_invoice`) as the default demo, so the result reads without knowing Russian. Its expected results were recomputed in plain Python from its own input cells and checked against `demo_acts.json` number for number; `olevba` reads it like the others. The Russian workbook stays as the code page 1251 sample.
+
+Current state: eight fixture workbooks match their hand-written oracles, all eight are read identically by `olevba`, 655 tests pass.

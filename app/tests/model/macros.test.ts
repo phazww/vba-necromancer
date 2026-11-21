@@ -46,15 +46,28 @@ describe("listMacros", () => {
 });
 
 describe("procedureSpans", () => {
-  it("graveyard: lines 5 to 19 and 20 to the last line", () => {
+  it("graveyard: lines 5 to 18 and 20 to 24 (the End Sub lines, not the next header)", () => {
     const e = exhume("graveyard.xlsm", fixtureBytes("graveyard"));
     const m = e.modules[0];
     if (!m.ast) throw new Error("module did not parse");
-    const spans = procedureSpans(m.ast.procedures, m.lines.length);
+    const spans = procedureSpans(m.ast.procedures);
     expect(spans.map((s) => [s.proc.name, s.from, s.to])).toEqual([
-      ["ExportReport", 5, 19],
-      ["ExportStrict", 20, m.lines.length],
+      ["ExportReport", 5, 18],
+      ["ExportStrict", 20, 24],
     ]);
     expect(m.lines.length).toBe(24);
+  });
+
+  it("lines between two procedures belong to neither", () => {
+    const e = parts([
+      { name: "M", source: "Sub A()\n  x = 1\nEnd Sub\n' note\nDim g As Long\n\nSub B()\nEnd Sub\n" },
+    ]);
+    const m = e.modules[0];
+    if (!m.ast) throw new Error("module did not parse");
+    const spans = procedureSpans(m.ast.procedures);
+    expect(spans.map((s) => [s.proc.name, s.from, s.to])).toEqual([
+      ["A", 1, 3],
+      ["B", 7, 8],
+    ]);
   });
 });

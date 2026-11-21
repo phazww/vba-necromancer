@@ -45,7 +45,7 @@ import {
   NewExpr,
   NodeLocation,
 } from "./ast.js";
-import { ParseError } from "./errors.js";
+import { ParseError, UnsupportedError } from "./errors.js";
 
 export function parse(tokens: Token[], moduleName: string): ModuleAST {
   return new Parser(tokens, moduleName).parseModule();
@@ -269,7 +269,7 @@ class Parser {
 
     this.skipToNextLine();
 
-    const body = this.parseBody(isFunction ? "Function" : "Sub");
+    const { stmts: body, endLine } = this.parseBody(isFunction ? "Function" : "Sub");
 
     if (isFunction) {
       const decl: FunctionDecl = {
@@ -280,6 +280,7 @@ class Parser {
         params,
         returnType,
         body,
+        endLine,
       };
       return decl;
     } else {
@@ -290,6 +291,7 @@ class Parser {
         scope,
         params,
         body,
+        endLine,
       };
       return decl;
     }
@@ -373,7 +375,7 @@ class Parser {
 
   // ── Body (statement list) ─────────────────────────────────────────────────
 
-  private parseBody(endKind: "Sub" | "Function"): Statement[] {
+  private parseBody(endKind: "Sub" | "Function"): { stmts: Statement[]; endLine: number } {
     const stmts: Statement[] = [];
     this.skipNewlines();
 
@@ -387,10 +389,10 @@ class Parser {
           (endKind === "Sub" && next.type === TokenType.Sub) ||
           (endKind === "Function" && next.type === TokenType.Function)
         ) {
-          this.advance(); // End
+          const endLine = this.advance().line; // End
           this.advance(); // Sub/Function
           this.skipToNextLine();
-          return stmts;
+          return { stmts, endLine };
         }
       }
 
@@ -404,7 +406,15 @@ class Parser {
     }
 
     // No matching End Sub/Function found — return what we have
-    return stmts;
+    return { stmts, endLine: this.lastLine() };
+  }
+
+  /** Line of the last token before EOF (the EOF token itself when the source is empty). */
+  private lastLine(): number {
+    const last = this.tokens[this.tokens.length - 1];
+    let i = this.tokens.length - 1;
+    while (i > 0 && (this.tokens[i].type === TokenType.EOF || this.tokens[i].type === TokenType.Newline)) i--;
+    return this.tokens[i]?.line ?? last.line;
   }
 
   // ── Statement dispatch ────────────────────────────────────────────────────
@@ -510,7 +520,7 @@ class Parser {
     // is unlikely at statement start, but handle). We now need to finish parsing from lhs
     // as if it were the first token of a full expression. We'll "wrap" lhs back into the
     // operator-precedence chain by promoting it.
-    const expr = this.continueExpression(lhs);
+    const expr = this.startsSignedArgument(lhs) ? lhs : this.continueExpression(lhs);
 
     // Otherwise treat as a call statement
     let args: Expression[] = [];
@@ -536,6 +546,20 @@ class Parser {
 
     const stmt: CallStatement = { ...loc, kind: "CallStatement", callee: expr, args };
     return stmt;
+  }
+
+  /**
+   * `Foo -1, 2` / `obj.Method -1`: a name or member without parentheses, then a `+`/`-` that
+   * has whitespace before it and none after it, starts the first argument (CALL-01).
+   */
+  private startsSignedArgument(lhs: Expression): boolean {
+    if (lhs.kind !== "Identifier" && lhs.kind !== "MemberExpr") return false;
+    const sign = this.current();
+    if (sign.type !== TokenType.Plus && sign.type !== TokenType.Minus) return false;
+    const prev = this.tokens[this.pos - 1];
+    const next = this.peek(1);
+    if (!prev || prev.line !== sign.line || next.line !== sign.line) return false;
+    return prev.col + prev.value.length < sign.col && next.col === sign.col + 1;
   }
 
   /**
@@ -609,13 +633,29 @@ class Parser {
   }
 
   private continuePower(left: Expression): Expression {
-    if (this.check(TokenType.Caret)) {
+    // VBA's ^ is left-associative: 2^3^2 = (2^3)^2 = 64
+    while (this.check(TokenType.Caret)) {
       const loc = this.loc();
       const op = this.advance().value;
-      const right = this.parseUnary();
-      return { ...loc, kind: "BinaryExpr", op, left, right } as BinaryExpr;
+      const right = this.parsePowerOperand();
+      left = { ...loc, kind: "BinaryExpr", op, left, right } as BinaryExpr;
     }
     return left;
+  }
+
+  /** Right operand of ^: an optional sign, then a postfix expression (no further ^). */
+  private parsePowerOperand(): Expression {
+    if (this.check(TokenType.Minus)) {
+      const loc = this.loc();
+      const op = this.advance().value;
+      const operand = this.parsePowerOperand();
+      return { ...loc, kind: "UnaryExpr", op, operand } as UnaryExpr;
+    }
+    if (this.check(TokenType.Plus)) {
+      this.advance();
+      return this.parsePowerOperand();
+    }
+    return this.parsePostfix();
   }
 
   /** Parse comma-separated expressions without enclosing parens (for bare-call arguments) */
@@ -1458,15 +1498,7 @@ class Parser {
   }
 
   private parsePower(): Expression {
-    let left = this.parsePostfix();
-    if (this.check(TokenType.Caret)) {
-      const loc = this.loc();
-      const op = this.advance().value;
-      const right = this.parseUnary(); // right-associative
-      const bin: BinaryExpr = { ...loc, kind: "BinaryExpr", op, left, right };
-      left = bin;
-    }
-    return left;
+    return this.continuePower(this.parsePostfix());
   }
 
   private parsePostfix(): Expression {
@@ -1550,6 +1582,29 @@ class Parser {
     return { kind: "NothingExpr", module: this.moduleName, line: this.current().line };
   }
 
+  /** `&H`/`&O` literal: 16-bit or 32-bit two's complement, see design 2.2. */
+  private radixLiteral(tok: Token, loc: NodeLocation): Literal {
+    const m = /^&([hHoO])([0-9a-fA-F]*)([%&^]?)$/.exec(tok.value);
+    if (!m) throw new ParseError(`Invalid literal '${tok.value}'`, this.moduleName, tok.line, tok.col);
+    const raw = parseInt(m[2], m[1].toLowerCase() === "h" ? 16 : 8);
+    const suffix = m[3];
+    if (suffix === "^") throw new UnsupportedError(this.moduleName, tok.line, "LongLong literal");
+    const tooBig = (): never => {
+      throw new ParseError(`Overflow in literal '${tok.value}'`, this.moduleName, tok.line, tok.col);
+    };
+    const asInteger = (): Literal => {
+      if (raw > 0xffff) return tooBig();
+      return { ...loc, kind: "Literal", value: raw >= 0x8000 ? raw - 0x10000 : raw, typeName: "Integer" };
+    };
+    const asLong = (): Literal => {
+      if (raw > 0xffffffff) return tooBig();
+      return { ...loc, kind: "Literal", value: raw >= 0x80000000 ? raw - 0x100000000 : raw, typeName: "Long" };
+    };
+    if (suffix === "%") return asInteger();
+    if (suffix === "&") return asLong();
+    return raw <= 0xffff ? asInteger() : asLong();
+  }
+
   private parsePrimary(): Expression {
     const tok = this.current();
     const loc = this.locAt(tok);
@@ -1557,6 +1612,7 @@ class Parser {
     // Literals
     if (tok.type === TokenType.IntegerLiteral || tok.type === TokenType.LongLiteral) {
       this.advance();
+      if (tok.value.startsWith("&")) return this.radixLiteral(tok, loc);
       const value = parseFloat(tok.value);
       // Unsuffixed literals take the smallest fitting type, as in VBA; "&" forces Long.
       const isInteger =

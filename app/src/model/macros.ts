@@ -28,20 +28,16 @@ export interface ProcedureSpan {
   proc: ProcedureDecl;
   /** First line, 1-based. */
   from: number;
-  /** Last line, inclusive: the line before the next procedure, or the last source line. */
+  /** Last line, inclusive: the line of `End Sub` / `End Function` (`ProcedureDecl.endLine`). */
   to: number;
 }
 
 /**
- * The AST has no end line for a procedure, so a procedure runs up to the line before the
- * next one. Comment lines between two procedures count with the one above. A construct is
- * therefore never lost, only possibly attributed to a neighbour's tail.
+ * A procedure runs from its header to its `End` line. Lines between two procedures (comments,
+ * module-level declarations) belong to no procedure.
  */
-export function procedureSpans(procedures: ProcedureDecl[], lineCount: number): ProcedureSpan[] {
-  const sorted = [...procedures].sort((a, b) => a.line - b.line);
-  return sorted.map((proc, i) => ({
-    proc,
-    from: proc.line,
-    to: i + 1 < sorted.length ? sorted[i + 1].line - 1 : Math.max(lineCount, proc.line),
-  }));
+export function procedureSpans(procedures: ProcedureDecl[]): ProcedureSpan[] {
+  return [...procedures]
+    .sort((a, b) => a.line - b.line)
+    .map((proc) => ({ proc, from: proc.line, to: proc.endLine }));
 }

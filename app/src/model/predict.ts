@@ -50,7 +50,7 @@ export function predictMacro(
   const spansByModule = new Map<string, ProcedureSpan[]>();
   modules.forEach((m, moduleIndex) => {
     if (!m.ast) return;
-    const spans = procedureSpans(m.ast.procedures, m.lines.length);
+    const spans = procedureSpans(m.ast.procedures);
     spansByModule.set(m.name, spans);
     for (const span of spans) procs.push({ moduleIndex, module: m.name, span });
   });

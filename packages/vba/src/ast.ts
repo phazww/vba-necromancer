@@ -206,6 +206,8 @@ export interface SubDecl extends NodeLocation {
   scope: "Public" | "Private" | "Friend" | "Static" | "";
   params: Parameter[];
   body: Statement[];
+  /** Line of `End Sub`; the last line seen when it is missing. */
+  endLine: number;
 }
 
 export interface FunctionDecl extends NodeLocation {
@@ -215,6 +217,8 @@ export interface FunctionDecl extends NodeLocation {
   params: Parameter[];
   returnType: string | null;
   body: Statement[];
+  /** Line of `End Function`; the last line seen when it is missing. */
+  endLine: number;
 }
 
 export type ProcedureDecl = SubDecl | FunctionDecl;

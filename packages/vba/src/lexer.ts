@@ -192,7 +192,8 @@ export function tokenize(source: string): Token[] {
     // Type suffix
     const suffix = peek();
     let type: TokenType;
-    if (suffix === "%" || suffix === "&" || suffix === "^") {
+    // `^` after a decimal literal is the exponent operator, not a suffix (POW-01)
+    if (suffix === "%" || suffix === "&") {
       value += advance();
       type = isFloat ? TokenType.DoubleLiteral : TokenType.LongLiteral;
     } else if (suffix === "!" || suffix === "#" || suffix === "@") {
@@ -208,20 +209,17 @@ export function tokenize(source: string): Token[] {
     let value = "&";
     advance(); // consume &
     const prefix = peek().toLowerCase();
-    if (prefix === "h" || prefix === "o") {
+    value += advance(); // h or o
+    const valid = prefix === "h" ? isHexDigit : isOctalDigit;
+    while (pos < source.length && valid(peek())) {
       value += advance();
-      while (pos < source.length && isHexDigit(peek())) {
-        value += advance();
-      }
-      // optional type suffix
-      if (peek() === "&" || peek() === "%") {
-        value += advance();
-      }
-      emit(TokenType.LongLiteral, value, startLine, startCol);
-    } else {
-      // It's the & concat operator
-      emit(TokenType.Concat, "&", startLine, startCol);
     }
+    // optional type suffix; the parser decides the final type from the value
+    const suffix = peek();
+    if (suffix === "&" || suffix === "%" || suffix === "^") {
+      value += advance();
+    }
+    emit(suffix === "%" ? TokenType.IntegerLiteral : TokenType.LongLiteral, value, startLine, startCol);
   }
 
   function readIdentifierOrKeyword(startLine: number, startCol: number): void {
@@ -344,7 +342,8 @@ export function tokenize(source: string): Token[] {
     // & prefix — hex/octal literal or concat
     if (ch === "&") {
       const next = peek(1).toLowerCase();
-      if (next === "h" || next === "o") {
+      const digit = peek(2);
+      if ((next === "h" && isHexDigit(digit)) || (next === "o" && isOctalDigit(digit))) {
         readHexOrOctal(startLine, startCol);
       } else {
         advance();
@@ -444,6 +443,10 @@ function isDigit(ch: string): boolean {
 
 function isHexDigit(ch: string): boolean {
   return (ch >= "0" && ch <= "9") || (ch >= "a" && ch <= "f") || (ch >= "A" && ch <= "F");
+}
+
+function isOctalDigit(ch: string): boolean {
+  return ch >= "0" && ch <= "7";
 }
 
 function isIdentStart(ch: string): boolean {

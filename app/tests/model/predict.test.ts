@@ -68,6 +68,23 @@ describe("predictMacro", () => {
     }
   });
 
+  it("a hit on a module-level line between two procedures is not attributed to the first one", () => {
+    const e = build([
+      {
+        name: "A",
+        source: "Sub One()\nEnd Sub\nDim x As New Foo\nSub Two()\nEnd Sub\n",
+      },
+    ]);
+    // The hit is on line 3. It is a declaration-level hit, so it applies to the module's
+    // macros through the module rule, and it is outside the span of One (lines 1 to 2).
+    expect(lines(e.staticUnsupported)).toEqual([3]);
+    const one = e.macros.find((m) => m.name === "One");
+    expect(lines(one?.prediction.hits ?? [])).toEqual([3]);
+    // Before endLine, line 3 counted as part of One only, and Two was predicted "fully".
+    const two = e.macros.find((m) => m.name === "Two");
+    expect(lines(two?.prediction.hits ?? [])).toEqual([3]);
+  });
+
   it("terminates on mutual recursion", () => {
     const e = build([
       { name: "A", source: "Sub Ping()\n  Pong\nEnd Sub\nSub Pong()\n  Ping\n  Shell \"x\"\nEnd Sub\n" },

@@ -152,7 +152,7 @@ Open items for a person: the manual checks in `docs/ui-checklist.md`, the first 
 - `e700bfc`: visual polish of the UI (first screen with a preview of the demo result, quieter panels, wider grid columns, mobile layout), MIT license.
 - `21c2952`: an English twin of the demo workbook (`demo_invoice`) as the default demo, so the result reads without knowing Russian. Its expected results were recomputed in plain Python from its own input cells and checked against `demo_acts.json` number for number; `olevba` reads it like the others. The Russian workbook stays as the code page 1251 sample.
 
-Current state: eight fixture workbooks match their hand-written oracles, all eight are read identically by `olevba`, 655 tests pass.
+State on 19 Nov: eight fixture workbooks match their hand-written oracles, all eight are read identically by `olevba`, 655 tests pass.
 
 ---
 
@@ -162,3 +162,11 @@ Current state: eight fixture workbooks match their hand-written oracles, all eig
 
 Review after the sheet-buttons run (developer with Claude Code, 20 Nov): the requirements were written by the developer, design and tasks by Kiro. Checked independently: `fixtures/expected` and the MS-OVBA known-answer test were not touched; all 759 tests, lint, typecheck and build pass; olevba still reads all eight fixtures identically; LibreOffice (an independent reader) opens the rebuilt `demo_invoice.xlsm` and shows a "Build invoice" push button anchored on sheet Log. LibreOffice does not show which macro the button calls, so the macro link itself is checked only by our own reader, and the file has still not been opened in desktop Excel.
 
+
+---
+
+## The parser-fixes spec (21 Nov)
+
+`.kiro/specs/parser-fixes/`: requirements by the developer (LIT-01..04 for `&H` and `&O` literals with a hand-written table of fourteen expected values, CALL-01..02 for `Foo -1, 2`, END-01..02 for procedure end lines), design and tasks PTASK-01..06 by Kiro. Kiro implemented the six tasks with the full check run after each. One existing UI-model test changed: the old `procedureSpans` guess (a Sub runs up to the line before the next one) gave 5–19 for the first graveyard macro; with `endLine` it is 5–18, and line 18 is the `End Sub` in `fixtures/src/graveyard`.
+
+Review (developer with Claude Code): an independent test outside Kiro's suite ran every row of the literal table through the interpreter, checking both the value and `TypeName`; all fourteen matched. The same check found a bug that predates the spec: `x = 2^3` stored 2 and stopped, because the lexer took `^` after a decimal number as a LongLong type suffix (`2 ^ 3` with spaces worked). It went back to Kiro as an addendum (POW-01, task PTASK-07) with expected values written first; Kiro also found that `^` was right-associative and made it left-associative, so `2^3^2` gives 64. After PTASK-07, 838 tests, lint, typecheck and build pass, and `fixtures/expected` is untouched.

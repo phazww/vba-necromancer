@@ -344,3 +344,39 @@ describe("parser: dotted type names and As New (DTASK-01)", () => {
     expect(a.isNew).toBe(false);
   });
 });
+
+describe("PTASK-04: endLine on ProcedureDecl (END-01)", () => {
+  it("is the line of End Sub / End Function, with blanks, comments and a multi-line If inside", () => {
+    const src = [
+      "Option Explicit", // 1
+      "Sub A()", // 2
+      "  ' comment", // 3
+      "", // 4
+      "  If x > 0 Then", // 5
+      "    y = 1", // 6
+      "  End If", // 7
+      "End Sub", // 8
+      "' between", // 9
+      "Dim g As Long", // 10
+      "Function B() As Long", // 11
+      "  B = 1", // 12
+      "End Function", // 13
+    ].join("\n");
+    const [a, b] = parseSource(src).procedures;
+    expect(a.line).toBe(2);
+    expect(a.endLine).toBe(8);
+    expect(b.line).toBe(11);
+    expect(b.endLine).toBe(13);
+  });
+
+  it("works with CRLF line endings and a one-line body", () => {
+    const [a] = parseSource("Sub A()\r\n  x = 1\r\nEnd Sub\r\n").procedures;
+    expect(a.endLine).toBe(3);
+  });
+
+  it("is the last line seen when End Sub is missing", () => {
+    const [a] = parseSource("Sub A()\n  x = 1\n\n").procedures;
+    expect(a.endLine).toBe(2);
+  });
+});
+

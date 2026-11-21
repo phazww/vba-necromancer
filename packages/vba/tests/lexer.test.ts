@@ -109,4 +109,44 @@ describe("tokenize", () => {
     expect(tokens[0].type).toBe(TokenType.Comment);
     expect(tokens[0].value.toLowerCase()).toContain("rem");
   });
+
+  describe("PTASK-01: &H and &O literals, & as concatenation", () => {
+    const lits: Array<[string, TokenType]> = [
+      ["&H10", TokenType.LongLiteral],
+      ["&HFF", TokenType.LongLiteral],
+      ["&hff", TokenType.LongLiteral],
+      ["&H7FFF", TokenType.LongLiteral],
+      ["&H8000", TokenType.LongLiteral],
+      ["&HFFFF", TokenType.LongLiteral],
+      ["&HFFFF&", TokenType.LongLiteral],
+      ["&H10000", TokenType.LongLiteral],
+      ["&H7FFFFFFF", TokenType.LongLiteral],
+      ["&H80000000", TokenType.LongLiteral],
+      ["&HFFFFFFFF", TokenType.LongLiteral],
+      ["&O17", TokenType.LongLiteral],
+      ["&O177777", TokenType.LongLiteral],
+      ["&HFF%", TokenType.IntegerLiteral],
+    ];
+    it.each(lits)("%s is one literal token with its full text", (src, type) => {
+      const tokens = tokenize(src).filter((t) => t.type !== TokenType.EOF);
+      expect(tokens).toHaveLength(1);
+      expect(tokens[0].type).toBe(type);
+      expect(tokens[0].value).toBe(src);
+    });
+
+    it("octal stops at a non-octal digit", () => {
+      const t = tokenize("&O19").filter((x) => x.type !== TokenType.EOF);
+      expect(t.map((x) => x.value)).toEqual(["&O1", "9"]);
+    });
+
+    it("& not followed by a valid digit is the concatenation operator", () => {
+      const t = tokenize("&HG").filter((x) => x.type !== TokenType.EOF);
+      expect(t.map((x) => x.type)).toEqual([TokenType.Concat, TokenType.Identifier]);
+    });
+
+    it.each(['"a"&"b"', 'n & ""', '"a" & H1', '"a" & h'])("%s uses Concat", (src) => {
+      const t = tokenize(src);
+      expect(t.filter((x) => x.type === TokenType.Concat)).toHaveLength(1);
+    });
+  });
 });

@@ -40,6 +40,8 @@ interface Expected {
 const names = readdirSync(join(ROOT, "fixtures/expected"))
   .filter((f) => f.endsWith(".json"))
   .map((f) => f.replace(/\.json$/, ""))
+  // vbscript_deps has static findings instead of runs; it is checked in vbscript-fixture.test.ts
+  .filter((n) => Array.isArray((JSON.parse(readFileSync(join(ROOT, "fixtures/expected", `${n}.json`), "utf8")) as { runs?: unknown }).runs))
   .sort();
 
 describe.each(names)("end to end: %s", (name) => {

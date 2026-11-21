@@ -16,7 +16,7 @@
  * xl/vbaProject.bin is a Compound File Binary whose VBA/ storage contains:
  *   VBA/_VBA_PROJECT   (p-code placeholder, 7 bytes)
  *   VBA/dir            (compressed dir stream)
- *   VBA/Module1        (compressed module source, encoded in the project code page)
+ *   VBA/<Module>      (one per .bas file; compressed source, encoded in the project code page)
  *   VBA/PROJECT        (plain-text project summary)
  */
 
@@ -109,11 +109,11 @@ function buildCFB(streams: StreamEntry[]): Uint8Array {
 
 // ---------------------------------------------------------------------------
 
-function buildProjectStream(projectName: string, moduleName: string, codePage: number): Uint8Array {
+function buildProjectStream(projectName: string, moduleNames: string[], codePage: number): Uint8Array {
   const lines = [
     `ID="{00000000-0000-0000-0000-000000000000}"`,
     `Document=ThisWorkbook/&H00000000`,
-    `Module=${moduleName}`,
+    ...moduleNames.map((m) => `Module=${m}`),
     `Name=${projectName}`,
     `HelpContextID="0"`,
     `VersionCompatible32="393222000"`,
@@ -434,6 +434,8 @@ interface CellsJson {
   codePage?: number;
   sheets: SheetDef[];
   buttons?: ButtonDef[];
+  /** REFERENCENAME + REFERENCEREGISTERED records of the VBA project, in this order. */
+  references?: { name: string; libid: string }[];
 }
 
 function buildFixture(fixtureName: string, srcDir: string, outDir: string): void {
@@ -453,28 +455,32 @@ function buildFixture(fixtureName: string, srcDir: string, outDir: string): void
     return;
   }
 
-  // For now we build a single-module VBA project (Module1.bas mandatory)
-  // If multiple modules exist, we still only embed Module1.bas per TASK-09 scope.
+  // Every .bas file is one module, in file-name order. Button macros without a module prefix
+  // belong to Module1, or to the first module when there is no Module1.
   const moduleBasName = "Module1.bas";
-  if (!basFiles.includes(moduleBasName)) {
-    console.warn(`[${fixtureName}] ${moduleBasName} not found; using first .bas: ${basFiles[0]}`);
-  }
-
-  const basFile = basFiles.includes(moduleBasName) ? moduleBasName : basFiles[0]!;
-  const moduleName = basFile.replace(/\.bas$/, "");
-  const sourceUtf8 = fs.readFileSync(path.join(srcDir, basFile), "utf-8");
-
-  // Encode source text in the project code page
-  const sourceBytes = encodeString(sourceUtf8, codePage);
-
-  // Build the compressed module stream (textOffset = 0, so compress directly)
-  const compressedModule = compress(sourceBytes);
+  const primaryFile = basFiles.includes(moduleBasName) ? moduleBasName : basFiles[0]!;
+  const moduleName = primaryFile.replace(/\.bas$/, "");
+  const moduleNames = basFiles.map((f) => f.replace(/\.bas$/, ""));
+  const moduleStreams = basFiles.map((f, i) => ({
+    path: `VBA/${moduleNames[i]!}`,
+    // textOffset = 0, so the compressed stream is the source itself
+    data: compress(encodeString(fs.readFileSync(path.join(srcDir, f), "utf-8"), codePage)),
+  }));
 
   // Build the dir stream
   const dirDecompressed = writeDirStream({
     codePage,
     projectName: "VBAProject",
-    modules: [{ name: moduleName, nameMbcs: encodeString(moduleName, codePage) }],
+    modules: moduleNames.map((n) => ({ name: n, nameMbcs: encodeString(n, codePage) })),
+    ...(cellsJson.references
+      ? {
+          references: cellsJson.references.map((r) => ({
+            name: r.name,
+            nameMbcs: encodeString(r.name, codePage),
+            libidMbcs: encodeString(r.libid, codePage),
+          })),
+        }
+      : {}),
   });
   const compressedDir = compress(dirDecompressed);
 
@@ -483,13 +489,13 @@ function buildFixture(fixtureName: string, srcDir: string, outDir: string): void
   const vbaProjectPlaceholder = new Uint8Array([0x61, 0x61, 0x00, 0x00, 0x00, 0xff, 0x09]);
 
   // PROJECT stream (plain text, encoded in code page)
-  const projectStream = buildProjectStream("VBAProject", moduleName, codePage);
+  const projectStream = buildProjectStream("VBAProject", moduleNames, codePage);
 
   // Build the vbaProject.bin CFB
   const vbaBin = buildCFB([
     { path: "VBA/_VBA_PROJECT", data: vbaProjectPlaceholder },
     { path: "VBA/dir", data: compressedDir },
-    { path: `VBA/${moduleName}`, data: compressedModule },
+    ...moduleStreams,
     { path: "PROJECT", data: projectStream },
   ]);
 

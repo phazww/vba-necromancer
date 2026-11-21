@@ -4,14 +4,14 @@ import type { VBAValue } from "@vba-necromancer/workbook";
 import { cellKey, deriveChanges } from "../../src/model/changes";
 import { exhume } from "../../src/model/exhume";
 import { resurrect } from "../../src/model/resurrect";
-import { FIXTURE_NAMES, expectedFor, fixtureBytes } from "../helpers";
+import { RUN_FIXTURE_NAMES, expectedFor, fixtureBytes } from "../helpers";
 
 function same(actual: VBAValue, expected: VBAValue, tol: number): boolean {
   if (typeof expected === "number" && typeof actual === "number") return Math.abs(actual - expected) <= tol;
   return actual === expected;
 }
 
-describe.each(FIXTURE_NAMES)("resurrect on %s matches its oracle", (name) => {
+describe.each(RUN_FIXTURE_NAMES)("resurrect on %s matches its oracle", (name) => {
   const expected = expectedFor(name);
   for (const run of expected.runs) {
     it(`${run.macro}: status, cells, changes`, () => {

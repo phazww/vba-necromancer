@@ -210,6 +210,59 @@ export function ButtonList(props: { exhumed: Exhumed; run: RunState }) {
   );
 }
 
+/** VBScript readiness (VBS-02): a static scan following Microsoft's guidance of 9 Sep 2025. */
+export function VbscriptSection(props: { exhumed: Exhumed }) {
+  const { state, dispatch } = useStore();
+  const { exhumed } = props;
+  const { vbscript, referenceProblems } = exhumed;
+  const selection = state.selection;
+  return (
+    <div class="vbscript">
+      <h3>VBScript readiness</h3>
+      <p class="muted">Static scan, following Microsoft's guidance of 9 Sep 2025.</p>
+      {exhumed.vba !== "present" ? (
+        <p class="muted">No VBA project was read, so VBScript dependencies could not be checked.</p>
+      ) : vbscript.length === 0 ? (
+        <p>No VBScript dependencies found</p>
+      ) : (
+        <ul class="plain-list">
+          {vbscript.map((f, i) => (
+            <li key={`${i}:${f.kind}`}>
+              {f.module !== null && f.line !== null ? (
+                <button
+                  type="button"
+                  class="entry"
+                  aria-current={
+                    selection?.origin === "graveyard" && selection.module === f.module && selection.line === f.line
+                      ? "true"
+                      : undefined
+                  }
+                  onClick={() => dispatch({ type: "select-graveyard", module: f.module as string, line: f.line as number })}
+                >
+                  <span class="where">{`${f.module}:${f.line}`}</span> <span class="construct">{f.text}</span>
+                </button>
+              ) : (
+                <div class="entry-static">
+                  <p>
+                    <span class="name">{f.reference?.name}</span> <span class="muted">(reference)</span>
+                  </p>
+                  <p>{f.text}</p>
+                  <p class="muted libid">{f.reference?.libid}</p>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      {referenceProblems.map((p) => (
+        <p key={p} class="muted">
+          {p}
+        </p>
+      ))}
+    </div>
+  );
+}
+
 export function ExhumePanel() {
   const { state } = useStore();
   const { exhumed, run } = state;
@@ -224,6 +277,7 @@ export function ExhumePanel() {
       <SheetList exhumed={exhumed} open={open} />
       <ModuleList exhumed={exhumed} open={open} />
       <NoVbaNotice exhumed={exhumed} />
+      <VbscriptSection exhumed={exhumed} />
       <ButtonList exhumed={exhumed} run={run} />
       <MacroList exhumed={exhumed} run={run} />
     </section>

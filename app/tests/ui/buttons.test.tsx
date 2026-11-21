@@ -118,7 +118,7 @@ describe("Buttons on sheets (BTN-05)", () => {
     const headings = within(panel())
       .getAllByRole("heading")
       .map((h) => h.textContent);
-    expect(headings).toEqual(["Exhume", "Macros"]);
+    expect(headings).toEqual(["Exhume", "VBScript readiness", "Macros"]);
   });
 
   it("shows a problem line, also when there are no buttons", () => {

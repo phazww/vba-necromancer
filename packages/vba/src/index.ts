@@ -10,6 +10,8 @@ export type { MemorySheetInit } from "./memory-workbook.js";
 export type { WorkbookHandle, SheetHandle, RangeHandle, VBAValue, XlDirection } from "./host.js";
 export { runMacro } from "./run.js";
 export { scanUnsupported } from "./constructs.js";
+export { scanVbscript, VBSCRIPT_TEXTS } from "./vbscript.js";
+export type { VbscriptFinding, VbscriptKind, VbscriptModuleInput, VbscriptReferenceInput } from "./vbscript.js";
 export type { TraceEvent, SourceRef } from "./trace.js";
 export { TracingWorkbook } from "./tracing-workbook.js";
 export {

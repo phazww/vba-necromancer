@@ -34,6 +34,11 @@ export const FIXTURE_NAMES: string[] = readdirSync(join(ROOT, "fixtures/build"))
   .map((f) => f.replace(/\.xlsm$/, ""))
   .sort();
 
+/** Fixtures with macro runs in their oracle. `vbscript_deps` has static findings instead of runs. */
+export const RUN_FIXTURE_NAMES: string[] = FIXTURE_NAMES.filter((n) =>
+  Array.isArray((JSON.parse(readFileSync(join(ROOT, "fixtures/expected", `${n}.json`), "utf8")) as { runs?: unknown }).runs),
+);
+
 export function fixtureBytes(name: string): Uint8Array {
   return new Uint8Array(readFileSync(join(ROOT, "fixtures/build", `${name}.xlsm`)));
 }

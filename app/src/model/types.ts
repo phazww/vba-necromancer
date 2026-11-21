@@ -1,6 +1,6 @@
-import type { ModuleAST, RunResult, UnsupportedHit } from "@vba-necromancer/vba";
+import type { ModuleAST, RunResult, UnsupportedHit, VbscriptFinding } from "@vba-necromancer/vba";
 import type { RawButton, SaveableWorkbook, VBAValue } from "@vba-necromancer/workbook";
-import type { ModuleType } from "@vba-necromancer/ovba";
+import type { DirReference, ModuleType } from "@vba-necromancer/ovba";
 
 export type VbaState = "present" | "none" | "unreadable-xls";
 
@@ -60,6 +60,12 @@ export interface Exhumed {
   /** One line per drawing part that could not be read. */
   buttonProblems: string[];
   staticUnsupported: UnsupportedHit[];
+  /** References of the VBA project (dir stream), in file order. */
+  references: DirReference[];
+  /** One line per reference record that could not be read. */
+  referenceProblems: string[];
+  /** VBScript readiness findings (VBS-01): references first, then code by module and line. */
+  vbscript: VbscriptFinding[];
   vba: VbaState;
   /** Why the VBA project could not be read, when it is present but broken. */
   vbaError: string | null;

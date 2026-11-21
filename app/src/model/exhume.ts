@@ -1,5 +1,5 @@
-import { extractModules, NoVBAProjectError } from "@vba-necromancer/ovba";
-import { ParseError, parse, scanUnsupported, tokenize } from "@vba-necromancer/vba";
+import { extractProject, NoVBAProjectError, type DirReference } from "@vba-necromancer/ovba";
+import { ParseError, parse, scanUnsupported, scanVbscript, tokenize } from "@vba-necromancer/vba";
 import { openWorkbook, readButtons } from "@vba-necromancer/workbook";
 import { resolveButtons } from "./buttons";
 import { countProcedures, listMacros } from "./macros";
@@ -10,6 +10,8 @@ import type { Exhumed, ExhumedModule, ModuleSource, SheetSummary, VbaState } fro
 export interface PartsOptions {
   vba?: VbaState;
   vbaError?: string | null;
+  references?: DirReference[];
+  referenceProblems?: string[];
 }
 
 /** Splits on any line ending; the terminator of the last line does not start a new line. */
@@ -67,6 +69,7 @@ export function exhumeParts(
     prediction: predictMacro(m, modules, staticUnsupported),
   }));
   const found = readButtons(bytes);
+  const references = options.references ?? [];
 
   return {
     fileName: name,
@@ -81,6 +84,10 @@ export function exhumeParts(
     buttons: resolveButtons(found.buttons, macros, name),
     buttonProblems: found.problems,
     staticUnsupported,
+    references,
+    referenceProblems: options.referenceProblems ?? [],
+    // Scan what was read: the sources as given, not the parsed modules.
+    vbscript: scanVbscript(sources, references),
     vba: options.vba ?? (sources.length > 0 ? "present" : "none"),
     vbaError: options.vbaError ?? null,
   };
@@ -94,8 +101,16 @@ export function extractSources(
   const kind = sniffKind(bytes);
   if (kind === "unknown") throw new NotAWorkbookError(name);
   try {
-    const sources = extractModules(bytes).map((m) => ({ name: m.name, type: m.type, source: m.source }));
-    return { sources, options: { vba: sources.length > 0 ? "present" : "none" } };
+    const project = extractProject(bytes);
+    const sources = project.modules.map((m) => ({ name: m.name, type: m.type, source: m.source }));
+    return {
+      sources,
+      options: {
+        vba: sources.length > 0 ? "present" : "none",
+        references: project.references,
+        referenceProblems: project.referenceProblems,
+      },
+    };
   } catch (e) {
     if (e instanceof NoVBAProjectError) {
       return { sources: [], options: { vba: kind === "cfb" ? "unreadable-xls" : "none" } };

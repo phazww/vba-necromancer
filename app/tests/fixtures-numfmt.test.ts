@@ -20,7 +20,7 @@ const rows = (
   }
 ).sheets[0].cells;
 
-const OLD = FIXTURE_NAMES.filter((n) => n !== "number_formats");
+const OLD = FIXTURE_NAMES.filter((n) => n !== "number_formats" && n !== "vbscript_deps");
 
 describe("fixture builder writes number formats (FMT-06)", () => {
   it("FMT-06 there are eight old fixtures and the new one", () => {

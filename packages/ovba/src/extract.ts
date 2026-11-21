@@ -1,6 +1,6 @@
 import { parseCFB } from "./cfb.js";
 import { decompress } from "./decompress.js";
-import { parseDirStream, type ModuleType } from "./dir.js";
+import { parseDirStream, type DirReference, type ModuleType } from "./dir.js";
 import { NoVBAProjectError } from "./errors.js";
 import { readZip, initZlibInflate } from "./zip.js";
 
@@ -8,6 +8,14 @@ export interface VBAModule {
   name: string;
   type: ModuleType;
   source: string;
+}
+
+/** What a VBA project holds: its modules and its references to libraries. */
+export interface ProjectInfo {
+  modules: VBAModule[];
+  references: DirReference[];
+  /** One line per reference record that could not be read. */
+  referenceProblems: string[];
 }
 
 /** ZIP local file header magic bytes: PK\x03\x04 */
@@ -32,6 +40,11 @@ function isZip(bytes: Uint8Array): boolean {
  * Throws NoVBAProjectError if no VBA project is found.
  */
 export function extractModules(fileBytes: Uint8Array): VBAModule[] {
+  return extractProject(fileBytes).modules;
+}
+
+/** Like `extractModules`, and also returns the project references from the dir stream. */
+export function extractProject(fileBytes: Uint8Array): ProjectInfo {
   let cfbBytes = fileBytes;
 
   if (isZip(fileBytes)) {
@@ -114,7 +127,7 @@ export function extractModules(fileBytes: Uint8Array): VBAModule[] {
     modules.push({ name: dirMod.name, type: dirMod.type, source });
   }
 
-  return modules;
+  return { modules, references: dirInfo.references, referenceProblems: dirInfo.referenceProblems };
 }
 
 export { initZlibInflate };

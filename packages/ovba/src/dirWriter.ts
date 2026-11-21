@@ -8,10 +8,19 @@ export interface DirWriterModule {
   nameMbcs: Uint8Array;
 }
 
+/** A REFERENCENAME + REFERENCEREGISTERED pair. Strings are encoded in the project code page. */
+export interface DirWriterReference {
+  name: string;
+  nameMbcs: Uint8Array;
+  libidMbcs: Uint8Array;
+}
+
 export interface DirWriterOptions {
   codePage: number;
   projectName: string;
   modules: DirWriterModule[];
+  /** PROJECTREFERENCES, in this order. Nothing is written when absent or empty. */
+  references?: DirWriterReference[];
 }
 
 class Out {
@@ -68,7 +77,14 @@ export function writeDirStream(opts: DirWriterOptions): Uint8Array {
   o.record(0x000c, []); // Constants
   o.record(0x003c, []); //   ConstantsUnicode
 
-  // PROJECTREFERENCES: none (a real Excel project references stdole and Office; not needed here)
+  // PROJECTREFERENCES (2.3.4.2.2): only the ones the fixture asks for. A real Excel project also
+  // references stdole and Office; not needed here.
+  for (const r of opts.references ?? []) {
+    o.record(0x0016, r.nameMbcs); // REFERENCENAME.Name
+    o.record(0x003e, utf16le(r.name)); //   Reserved 0x003E + NameUnicode
+    // REFERENCEREGISTERED: Size covers SizeOfLibid, Libid, Reserved1 (4), Reserved2 (2)
+    o.record(0x000d, [...u32le(r.libidMbcs.length), ...Array.from(r.libidMbcs), ...u32le(0), 0, 0]);
+  }
 
   // PROJECTMODULES
   o.record(0x000f, [opts.modules.length & 0xff, (opts.modules.length >> 8) & 0xff]);

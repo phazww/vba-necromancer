@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { exhume, exhumeParts } from "../../src/model/exhume";
-import { FIXTURE_NAMES, expectedFor, fixtureBytes } from "../helpers";
+import { RUN_FIXTURE_NAMES, expectedFor, fixtureBytes } from "../helpers";
 
 function build(sources: Array<{ name: string; source: string }>) {
   return exhumeParts(
@@ -99,7 +99,7 @@ describe("prediction against the hand-written oracles", () => {
   // here with the reason. None at the moment: every conservative case in the corpus is partly.
   const KNOWN_OVERCAUTIOUS: string[] = [];
 
-  it.each(FIXTURE_NAMES)("%s: fully is never wrong, partly is always predicted", (name) => {
+  it.each(RUN_FIXTURE_NAMES)("%s: fully is never wrong, partly is always predicted", (name) => {
     const e = exhume(`${name}.xlsm`, fixtureBytes(name));
     for (const run of expectedFor(name).runs) {
       const macro = e.macros.find((m) => m.name.toLowerCase() === run.macro.toLowerCase());

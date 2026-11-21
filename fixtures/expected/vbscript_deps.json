@@ -1,0 +1,14 @@
+{
+  "findings": [
+    {
+      "kind": "vbscript-reference",
+      "reference": {
+        "name": "VBScript_RegExp_55",
+        "libid": "*\\G{3F4DACA0-160D-11D2-A8E9-00104B365C9F}#5.5#0#C:\\Windows\\System32\\vbscript.dll\\3#Microsoft VBScript Regular Expressions 5.5"
+      }
+    },
+    { "kind": "vbscript-createobject", "module": "LateBound", "line": 5 },
+    { "kind": "external-vbs", "module": "Nightly", "line": 4 }
+  ],
+  "notes": "Written by hand from the table in .kiro/specs/vbscript-readiness/requirements.md (VBS-03) before the scanner existed. Reference: the registered reference of the project, no line. LateBound line 5: line 1 Option Explicit, 2 blank, 3 Public Sub, 4 Dim re As Object, 5 Set re = CreateObject(...). Nightly line 4: 1 Option Explicit, 2 blank, 3 Public Sub, 4 Shell ... . EarlyBound has no finding of its own: Dim re As New RegExp is covered by the reference row. Order: references first, then code findings by module (EarlyBound, LateBound, Nightly) and line."
+}

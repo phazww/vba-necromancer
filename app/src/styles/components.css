@@ -712,6 +712,22 @@ li:only-child > .entry {
   font-weight: 500;
 }
 
+.entry-static {
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-control);
+}
+
+.entry-static p {
+  margin: 0;
+}
+
+.entry-static .libid {
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+}
+
 .entry--stopped .mark {
   color: var(--danger);
   font-weight: 600;

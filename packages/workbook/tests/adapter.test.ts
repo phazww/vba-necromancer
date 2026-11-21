@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 import * as XLSX from "xlsx";
-import { openWorkbook } from "../src/index.js";
+import { hasCellFormats, openWorkbook } from "../src/index.js";
 
 const ROOT = resolve(__dirname, "../../..");
 const bytes = (): Uint8Array => new Uint8Array(readFileSync(resolve(ROOT, "fixtures/build/acts_by_category.xlsm")));
@@ -94,5 +94,75 @@ describe("SheetJS workbook adapter", () => {
     expect(sheet.getCellFormula(1, 1)).toBeNull();
     sheet.setCellValue(1, 3, 9);
     expect(sheet.getCellFormula(1, 3)).toBeNull();
+  });
+});
+
+describe("number formats on cells (FMT-01, FMT-05)", () => {
+  function withFormats(): Uint8Array {
+    const ws: XLSX.WorkSheet = {
+      A1: { t: "n", v: 46296, z: "yyyy-mm-dd" },
+      A2: { t: "s", v: "text", z: "0.00" },
+      A3: { t: "n", v: 5 },
+      A4: { t: "n", v: 1234.5, z: "#,##0.00" },
+      "!ref": "A1:A4",
+    };
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "S");
+    return new Uint8Array(XLSX.write(wb, { type: "array", bookType: "xlsx" }) as ArrayBuffer);
+  }
+  const sheetOf = (b: Uint8Array) => {
+    const s = openWorkbook(b).getSheet("S");
+    if (!hasCellFormats(s)) throw new Error("expected a sheet with formats");
+    return s;
+  };
+
+  it("FMT-01 getCellFormat reports the format of a numeric cell and the stored value is unchanged", () => {
+    const s = sheetOf(withFormats());
+    expect(s.getCellFormat(1, 1)).toBe("yyyy-mm-dd");
+    expect(s.getCellValue(1, 1)).toBe(46296);
+    expect(s.getCellFormat(4, 1)).toBe("#,##0.00");
+  });
+  it("FMT-01 a string cell, an empty cell and a cell without a format report null", () => {
+    const s = sheetOf(withFormats());
+    expect(s.getCellFormat(2, 1)).toBeNull();
+    expect(s.getCellFormat(9, 9)).toBeNull();
+    expect(s.getCellFormat(3, 1)).toBeNull(); // SheetJS reads "General" for it; General is reported as no format
+  });
+  it("FMT-05 setCellValue keeps the format for a number, a string and a boolean", () => {
+    const s = sheetOf(withFormats());
+    s.setCellValue(1, 1, 46297);
+    expect(s.getCellFormat(1, 1)).toBe("yyyy-mm-dd");
+    expect(s.getCellValue(1, 1)).toBe(46297);
+    s.setCellValue(1, 1, "x");
+    s.setCellValue(1, 1, 7);
+    expect(s.getCellFormat(1, 1)).toBe("yyyy-mm-dd");
+    s.setCellValue(4, 1, true);
+    s.setCellValue(4, 1, 2);
+    expect(s.getCellFormat(4, 1)).toBe("#,##0.00");
+  });
+  it("FMT-05 a cell without a format stays without one; clearing a cell drops its format", () => {
+    const s = sheetOf(withFormats());
+    s.setCellValue(3, 1, 6);
+    expect(s.getCellFormat(3, 1)).toBeNull();
+    s.setCellValue(1, 1, null);
+    s.setCellValue(1, 1, 3);
+    expect(s.getCellFormat(1, 1)).toBeNull();
+  });
+  it("FMT-01 save() keeps the stored number and the format", () => {
+    const s = sheetOf(withFormats());
+    s.setCellValue(1, 1, 46297);
+    const wb = openWorkbook(withFormats());
+    const sheet = wb.getSheet("S");
+    sheet.setCellValue(1, 1, 46297);
+    const again = sheetOf(wb.save());
+    expect(again.getCellValue(1, 1)).toBe(46297);
+    expect(again.getCellFormat(1, 1)).toBe("yyyy-mm-dd");
+    expect(again.getCellFormat(4, 1)).toBe("#,##0.00");
+  });
+  it("FMT-01 hasCellFormats tells sheets with formats from those without", () => {
+    const s = sheetOf(withFormats());
+    expect(hasCellFormats(s)).toBe(true);
+    const plain = { name: "x" } as unknown as Parameters<typeof hasCellFormats>[0];
+    expect(hasCellFormats(plain)).toBe(false);
   });
 });

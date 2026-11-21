@@ -2,9 +2,10 @@ import { describe, it, expect } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/preact";
 import * as XLSX from "xlsx";
 import { openWorkbook } from "@vba-necromancer/workbook";
+import { parse, runMacro, tokenize } from "@vba-necromancer/vba";
 import axe from "axe-core";
 import { App } from "../../src/App";
-import { cellKey } from "../../src/model/changes";
+import { cellKey, deriveChanges } from "../../src/model/changes";
 import { resolveButtons } from "../../src/model/buttons";
 import { exhume, exhumeParts } from "../../src/model/exhume";
 import { initialState, reduce } from "../../src/state/reducer";
@@ -310,5 +311,71 @@ describe("Button marks in the grid (BTN-06)", () => {
     const h2 = cellAt(container, 2, 8) as HTMLElement;
     expect(h2.querySelector(".grid-mark")?.textContent).toBe("Build invoice");
     expect(container.querySelectorAll(".grid-mark")).toHaveLength(1);
+  });
+});
+
+describe("Grid number formats (FMT-01, FMT-04, FMT-05)", () => {
+  function formatted(): Uint8Array {
+    return bookBytes([[46296, 7, 1234.5, "text", 0.125]], (ws) => {
+      ws["A1"] = { t: "n", v: 46296, z: "yyyy-mm-dd" };
+      ws["B1"] = { t: "n", v: 7, z: "0" };
+      ws["C1"] = { t: "n", v: 1234.5 };
+      ws["E1"] = { t: "n", v: 0.125, z: "0.0%" };
+    });
+  }
+  const gridOf = (sheet: ReturnType<typeof sheetOf>, changes?: ReadonlyMap<number, { before: number }>) =>
+    render(<Grid sheet={sheet} changes={changes} selected={null} onSelectCell={noop} />).container;
+
+  it("FMT-01 a numeric cell with a format shows the formatted text, others are unchanged", () => {
+    const c = gridOf(openWorkbook(formatted()).getSheet("Data"));
+    expect(cellAt(c, 1, 1)?.textContent).toBe("2026-10-01");
+    expect(cellAt(c, 1, 3)?.textContent).toBe("1234.5");
+    expect(cellAt(c, 1, 4)?.textContent).toBe("text");
+    expect(cellAt(c, 1, 5)?.textContent).toBe("12.5%");
+    expect(cellAt(c, 1, 1)?.className).toContain("cell--number");
+  });
+
+  it("FMT-01 a sheet without getCellFormat shows the plain number", () => {
+    const sheet = openWorkbook(formatted()).getSheet("Data");
+    const plain = new Proxy(sheet, {
+      get: (target, prop) => (prop === "getCellFormat" ? undefined : Reflect.get(target, prop)),
+    });
+    const c = gridOf(plain);
+    expect(cellAt(c, 1, 1)?.textContent).toBe("46296");
+  });
+
+  it("FMT-04 the accessible name and the hover text give the stored value next to the formatted one", () => {
+    const c = gridOf(openWorkbook(formatted()).getSheet("Data"));
+    const cell = cellAt(c, 1, 1);
+    expect(cell?.getAttribute("aria-label")).toBe("2026-10-01, stored 46296");
+    expect(cell?.getAttribute("title")).toBe("stored 46296");
+    expect(cellAt(c, 1, 5)?.getAttribute("aria-label")).toBe("12.5%, stored 0.125");
+  });
+
+  it("FMT-04 no stored suffix when the formatted text equals the plain text", () => {
+    const c = gridOf(openWorkbook(formatted()).getSheet("Data"));
+    expect(cellAt(c, 1, 2)?.getAttribute("aria-label")).toBeNull();
+    expect(cellAt(c, 1, 2)?.getAttribute("title")).toBeNull();
+    expect(cellAt(c, 1, 3)?.getAttribute("aria-label")).toBeNull();
+  });
+
+  it("FMT-05 FMT-04 a macro write keeps the format; a changed cell says what was stored before", () => {
+    const wb = openWorkbook(formatted());
+    const asts = [parse(tokenize('Sub M()\n  Range("A1").Value = Range("A1").Value + 1\n  Range("C1").Value = 5\nEnd Sub\n'), "Module1")];
+    const result = runMacro("Module1.M", asts, wb);
+    expect(result.status).toBe("fully resurrected");
+    const changes = deriveChanges(result.trace).bySheet.get("Data");
+    const c = gridOf(wb.getSheet("Data"), changes as ReadonlyMap<number, { before: number }>);
+    expect(cellAt(c, 1, 1)?.textContent).toBe("2026-10-02");
+    expect(cellAt(c, 1, 1)?.getAttribute("aria-label")).toBe("2026-10-02, stored 46297, changed, was 46296");
+    expect(cellAt(c, 1, 3)?.textContent).toBe("5");
+    expect(cellAt(c, 1, 3)?.getAttribute("aria-label")).toBe("5, changed, was 1234.5");
+    expect(result.trace.some((e) => e.kind === "write" && e.after === 46297 && e.before === 46296)).toBe(true);
+  });
+
+  it("FMT-04 the grid with formatted cells has no axe violations", async () => {
+    const c = gridOf(openWorkbook(formatted()).getSheet("Data"));
+    const res = await axe.run(c);
+    expect(res.violations).toEqual([]);
   });
 });

@@ -93,6 +93,12 @@ Open `fixtures/build/demo_invoice.xlsm` in desktop Excel and click the button. T
 
 Result: not verified in Excel yet (pass or fail, date, Excel version, note)
 
+## Number formats in the grid
+
+Open `fixtures/build/number_formats.xlsm`. Cell A1 shows `2026-10-01`, A9 shows `1,234,567.89`, A18 shows `(1,500.00)`. With a screen reader on A1 the name is "2026-10-01, stored 46296"; hovering A1 shows "stored 46296". Run `Module1.CopyFirst`: B1 shows `46296` (no format) and A1 is unchanged.
+
+Result: (pass or fail, date, browser, note)
+
 ## Measured numbers
 
 Measured on the machine that built the UI (an Apple silicon Mac, Node, jsdom, the tests in `app/tests/perf.test.ts` and `app/tests/ui/perf-render.test.tsx`). Run them again on the machine you care about and write the numbers here.

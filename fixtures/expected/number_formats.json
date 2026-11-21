@@ -1,0 +1,16 @@
+{
+  "runs": [
+    {
+      "macro": "CopyFirst",
+      "status": "fully resurrected",
+      "cells": [{ "sheet": "Formats", "row": 1, "col": 2, "value": 46296 }],
+      "unsupported": []
+    }
+  ],
+  "numericTolerance": 1e-9,
+  "notes": [
+    "A1 stores 46296 (shown as 2026-10-01 through its number format). The macro copies the stored number, not the shown text, so B1 is 46296.",
+    "B1 has no number format, so it shows the plain number.",
+    "The display column of the table in .kiro/specs/number-formats/requirements.md is the oracle of the formatter tests, not of this run."
+  ]
+}

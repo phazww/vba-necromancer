@@ -1,6 +1,7 @@
 import { useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { SheetHandle, VBAValue } from "@vba-necromancer/workbook";
 import { cellKey } from "../model/changes";
+import { displayText } from "../model/display";
 import { colLetters, formatValue } from "../model/format";
 import { nextIndex } from "./useRovingFocus";
 import { DEFAULT_VIEWPORT, visibleRange } from "./useWindow";
@@ -153,17 +154,20 @@ export function Grid(props: GridProps) {
     const cells = [];
     for (let c = cols.start + 1; c <= cols.end; c++) {
       const value = sheet.getCellValue(r, c);
-      const text = formatValue(value);
+      const text = displayText(sheet, r, c, value);
+      const stored = formatValue(value);
+      const formatted = text !== stored; // a number shown through its number format (FMT-04)
       const formula = sheet.getCellFormula(r, c);
       const changed = changes?.get(cellKey(r, c));
       const isSelected = selected !== null && selected.row === r && selected.col === c;
       const isActive = active.row === r && active.col === c;
       const truncated = text.length > MAX_VISIBLE_CHARS;
       const mark = marks?.get(cellKey(r, c));
+      const shownName = formatted ? `${text}, stored ${stored}` : text === "" ? "empty" : text;
       const label = changed
-        ? `${text === "" ? "empty" : text}, changed, was ${formatValue(changed.before) === "" ? "empty" : formatValue(changed.before)}`
-        : truncated
-          ? text
+        ? `${shownName}, changed, was ${formatValue(changed.before) === "" ? "empty" : formatValue(changed.before)}`
+        : formatted || truncated
+          ? shownName
           : undefined;
       cells.push(
         <div
@@ -178,7 +182,7 @@ export function Grid(props: GridProps) {
           tabIndex={isActive ? 0 : -1}
           data-row={r}
           data-col={c}
-          title={truncated ? text : undefined}
+          title={formatted ? (truncated ? `${text}, stored ${stored}` : `stored ${stored}`) : truncated ? text : undefined}
           onClick={() => {
             setActive({ row: r, col: c });
             onSelectCell(r, c);

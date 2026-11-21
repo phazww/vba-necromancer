@@ -38,6 +38,13 @@ export class SheetJSSheet implements RangeSheet {
     return cellToValue(this.ws[XLSX.utils.encode_cell({ r: row - 1, c: col - 1 })]);
   }
 
+  /** The number format string of a numeric cell, or null (no cell, not a number, no format or General). */
+  getCellFormat(row: number, col: number): string | null {
+    const cell = this.ws[XLSX.utils.encode_cell({ r: row - 1, c: col - 1 })] as XLSX.CellObject | undefined;
+    if (cell?.t !== "n" || typeof cell.z !== "string") return null;
+    return cell.z === "" || cell.z.toLowerCase() === "general" ? null : cell.z;
+  }
+
   /** The formula text of a cell with a leading "=", or null when the cell holds no formula. */
   getCellFormula(row: number, col: number): string | null {
     const f = (
@@ -70,6 +77,7 @@ export class SheetJSSheet implements RangeSheet {
 
   setCellValue(row: number, col: number, value: VBAValue): void {
     const addr = XLSX.utils.encode_cell({ r: row - 1, c: col - 1 });
+    const oldFormat = (this.ws[addr] as XLSX.CellObject | undefined)?.z;
     if (value === null) {
       if (this.bounds && (row >= this.bounds.row || col >= this.bounds.col)) this.bounds = null;
       delete this.ws[addr];
@@ -82,6 +90,7 @@ export class SheetJSSheet implements RangeSheet {
         : typeof value === "boolean"
           ? { t: "b", v: value }
           : { t: "s", v: value };
+    if (oldFormat !== undefined) cell.z = oldFormat; // a macro changes the value, not the number format
     this.ws[addr] = cell;
     if (this.bounds)
       this.bounds = { row: Math.max(this.bounds.row, row), col: Math.max(this.bounds.col, col) };

@@ -40,7 +40,7 @@ function loadFixture(name: string) {
   return { cells, modules, expected };
 }
 
-describe.each(["numeric_semantics", "strings", "labour_statement", "dictionary_grouping"])("fixture %s", (name) => {
+describe.each(["numeric_semantics", "strings", "labour_statement", "dictionary_grouping", "number_formats"])("fixture %s", (name) => {
   if (!existsSync(join(ROOT, "fixtures/src", name))) return;
   const { cells, modules, expected } = loadFixture(name);
   const workbook = new MemoryWorkbook(cells.sheets);

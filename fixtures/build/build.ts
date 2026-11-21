@@ -7,6 +7,7 @@
  *   xl/workbook.xml
  *   xl/_rels/workbook.xml.rels
  *   xl/sharedStrings.xml
+ *   xl/styles.xml               (only when a cell has a "z" number format in cells.json)
  *   xl/worksheets/sheet<n>.xml  (one per sheet)
  *   xl/worksheets/_rels/sheet<n>.xml.rels, xl/drawings/vmlDrawing<k>.vml
  *                               (only for sheets with `buttons` in cells.json: Form Control buttons)
@@ -143,6 +144,8 @@ interface CellDef {
   row: number;
   col: number;
   value: string | number | boolean;
+  /** Optional number format string (FMT-06), written as a cell style. */
+  z?: string;
 }
 
 interface SheetDef {
@@ -177,6 +180,7 @@ function buildWorksheetXml(
   sheet: SheetDef,
   sharedStrings: string[],
   hasLegacyDrawing = false,
+  styleIndex?: ReadonlyMap<string, number>,
 ): string {
   // Map string values to shared string indices
   const ssIndex = new Map<string, number>();
@@ -208,13 +212,15 @@ function buildWorksheetXml(
     xml += `    <row r="${rowNum}">\n`;
     for (const c of cells.sort((a, b) => a.col - b.col)) {
       const ref = cellRef(c.row, c.col);
+      const xf = c.z !== undefined ? styleIndex?.get(c.z) : undefined;
+      const style = xf !== undefined ? ` s="${xf}"` : "";
       if (typeof c.value === "number") {
-        xml += `      <c r="${ref}"><v>${c.value}</v></c>\n`;
+        xml += `      <c r="${ref}"${style}><v>${c.value}</v></c>\n`;
       } else if (typeof c.value === "boolean") {
-        xml += `      <c r="${ref}" t="b"><v>${c.value ? 1 : 0}</v></c>\n`;
+        xml += `      <c r="${ref}"${style} t="b"><v>${c.value ? 1 : 0}</v></c>\n`;
       } else {
         const idx = ssIndex.get(c.value)!;
-        xml += `      <c r="${ref}" t="s"><v>${idx}</v></c>\n`;
+        xml += `      <c r="${ref}"${style} t="s"><v>${idx}</v></c>\n`;
       }
     }
     xml += `    </row>\n`;
@@ -223,6 +229,42 @@ function buildWorksheetXml(
   xml += `  </sheetData>\n`;
   if (hasLegacyDrawing) xml += `  <legacyDrawing r:id="rId1"/>\n`;
   xml += `</worksheet>\n`;
+  return xml;
+}
+
+/** Distinct number formats in order of first use; xf index = position + 1 (xf 0 is the default). */
+function collectFormats(sheets: SheetDef[]): string[] {
+  const formats: string[] = [];
+  for (const sheet of sheets) {
+    for (const c of sheet.cells) {
+      if (c.z !== undefined && !formats.includes(c.z)) formats.push(c.z);
+    }
+  }
+  return formats;
+}
+
+/** xl/styles.xml with one cell format per number format. Only written when some cell has `z`. */
+function buildStylesXml(formats: string[]): string {
+  const FIRST_CUSTOM_ID = 164;
+  let xml =
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n` +
+    `<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">\n` +
+    `  <numFmts count="${formats.length}">\n`;
+  formats.forEach((f, i) => {
+    xml += `    <numFmt numFmtId="${FIRST_CUSTOM_ID + i}" formatCode="${escapeXml(f)}"/>\n`;
+  });
+  xml +=
+    `  </numFmts>\n` +
+    `  <fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts>\n` +
+    `  <fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>\n` +
+    `  <borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>\n` +
+    `  <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>\n` +
+    `  <cellXfs count="${formats.length + 1}">\n` +
+    `    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>\n`;
+  formats.forEach((_f, i) => {
+    xml += `    <xf numFmtId="${FIRST_CUSTOM_ID + i}" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>\n`;
+  });
+  xml += `  </cellXfs>\n` + `</styleSheet>\n`;
   return xml;
 }
 
@@ -250,7 +292,7 @@ function buildWorkbookXml(sheets: SheetDef[]): string {
   return xml;
 }
 
-function buildWorkbookRels(sheets: SheetDef[]): string {
+function buildWorkbookRels(sheets: SheetDef[], withStyles = false): string {
   let xml =
     `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n` +
     `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n`;
@@ -270,6 +312,12 @@ function buildWorkbookRels(sheets: SheetDef[]): string {
     `  <Relationship Id="rId${ssId}" ` +
     `Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" ` +
     `Target="sharedStrings.xml"/>\n`;
+  if (withStyles) {
+    xml +=
+      `  <Relationship Id="rId${ssId + 1}" ` +
+      `Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" ` +
+      `Target="styles.xml"/>\n`;
+  }
   xml += `</Relationships>\n`;
   return xml;
 }
@@ -285,7 +333,7 @@ function buildRootRels(): string {
   );
 }
 
-function buildContentTypes(sheets: SheetDef[], withVml: boolean): string {
+function buildContentTypes(sheets: SheetDef[], withVml: boolean, withStyles = false): string {
   let xml =
     `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n` +
     `<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">\n` +
@@ -305,6 +353,11 @@ function buildContentTypes(sheets: SheetDef[], withVml: boolean): string {
     xml +=
       `  <Override PartName="/xl/worksheets/sheet${i + 1}.xml" ` +
       `ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>\n`;
+  }
+  if (withStyles) {
+    xml +=
+      `  <Override PartName="/xl/styles.xml" ` +
+      `ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>\n`;
   }
   xml += `</Types>\n`;
   return xml;
@@ -447,6 +500,9 @@ function buildFixture(fixtureName: string, srcDir: string, outDir: string): void
       throw new Error(`[${fixtureName}] button "${b.text}" names an unknown sheet: ${b.sheet}`);
     }
   }
+  const formats = collectFormats(cellsJson.sheets);
+  const styleIndex = new Map(formats.map((f, i) => [f, i + 1] as const));
+  const withStyles = formats.length > 0;
   const sharedStrings: string[] = [];
   const worksheetXmls: { name: string; xml: string }[] = [];
   const drawingFiles: { name: string; data: Uint8Array }[] = [];
@@ -468,16 +524,17 @@ function buildFixture(fixtureName: string, srcDir: string, outDir: string): void
     }
     worksheetXmls.push({
       name: `xl/worksheets/sheet${i + 1}.xml`,
-      xml: buildWorksheetXml(sheet, sharedStrings, own.length > 0),
+      xml: buildWorksheetXml(sheet, sharedStrings, own.length > 0, styleIndex),
     });
   }
 
   const zipFiles: { name: string; data: Uint8Array }[] = [
-    { name: "[Content_Types].xml", data: enc(buildContentTypes(cellsJson.sheets, vmlCount > 0)) },
+    { name: "[Content_Types].xml", data: enc(buildContentTypes(cellsJson.sheets, vmlCount > 0, withStyles)) },
     { name: "_rels/.rels", data: enc(buildRootRels()) },
     { name: "xl/workbook.xml", data: enc(buildWorkbookXml(cellsJson.sheets)) },
-    { name: "xl/_rels/workbook.xml.rels", data: enc(buildWorkbookRels(cellsJson.sheets)) },
+    { name: "xl/_rels/workbook.xml.rels", data: enc(buildWorkbookRels(cellsJson.sheets, withStyles)) },
     { name: "xl/sharedStrings.xml", data: enc(buildSharedStringsXml(sharedStrings)) },
+    ...(withStyles ? [{ name: "xl/styles.xml", data: enc(buildStylesXml(formats)) }] : []),
     ...worksheetXmls.map((w) => ({ name: w.name, data: enc(w.xml) })),
     ...drawingFiles,
     { name: "xl/vbaProject.bin", data: vbaBin },

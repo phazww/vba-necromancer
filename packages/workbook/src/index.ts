@@ -5,3 +5,6 @@ export { readButtons } from "./buttons.js";
 export type { RawButton, ButtonReadResult } from "./buttons.js";
 export { parseMacroRef } from "./macroRef.js";
 export type { MacroRef } from "./macroRef.js";
+export { formatNumber } from "./numfmt.js";
+export { hasCellFormats } from "./formatted.js";
+export type { FormattedSheet } from "./formatted.js";

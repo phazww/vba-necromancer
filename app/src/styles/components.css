@@ -370,6 +370,15 @@
   white-space: nowrap;
 }
 
+/* An empty cell gives the whole width to the caption. */
+.cell-value:empty {
+  display: none;
+}
+
+.cell-value:empty + .grid-mark {
+  max-width: 100%;
+}
+
 .cell--number .cell-value {
   text-align: right;
 }
